@@ -1,51 +1,53 @@
-# Product Requirements Document — Telegram AI Bot
-
-**Status:** Draft
-**Date:** 2026-06-11
-
-> This PRD consolidates the project's vision, scope, requirements, technical approach, and phased delivery plan into a single document **for review before implementation begins**. It is derived from the detailed planning artifacts in `.planning/` (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and domain research).
+# PRD — Telegram AI Bot
+**Version 0.1 (Draft) | Last updated: 2026-06-11**
 
 ---
 
-## 1. Summary
+## 1. Overview
 
-A **public Telegram bot** that acts as a general-purpose AI assistant. A user sends a text message in Telegram; the bot forwards it to the **OpenAI (ChatGPT) API**, and the reply is sent straight back into the chat. The bot is stateless (each message answered independently), runs **24/7 in Docker on a DigitalOcean droplet**, and redeploys automatically via a CI/CD pipeline on every push to `main`.
+A public Telegram bot that acts as a general-purpose AI assistant. A user sends a text message; the bot forwards it to the OpenAI (ChatGPT) API and sends the reply straight back into the chat. The bot is stateless (each message answered independently, no memory), runs 24/7 in Docker on a DigitalOcean droplet, and redeploys automatically via GitHub Actions on every push to `main`.
 
 **Core value:** *Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.*
 
 ---
 
-## 2. Problem & Motivation
+## 2. Problem Statement
 
-People increasingly want quick AI answers, but switching to a separate app or website adds friction. Telegram is already open on most users' phones. A bot that lives inside Telegram makes AI assistance a single message away, with no new app to install and no account to create beyond Telegram itself.
-
-This project is also a deliberately **scoped, shippable MVP** — small enough to build and deploy end-to-end, while exercising the full lifecycle (API integration, reliability, containerization, automated deployment) on real cloud infrastructure.
+People increasingly want quick AI answers, but switching to a separate app or website adds friction. Telegram is already open on most users' phones. A bot that lives inside Telegram makes AI assistance a single message away — no new app to install, no account beyond Telegram itself. This project also serves as a deliberately scoped, shippable MVP that exercises the full lifecycle (API integration, reliability, containerization, automated deployment) on real cloud infrastructure.
 
 ---
 
-## 3. Target Users
+## 3. Goals
 
-- **Primary:** Any Telegram user who messages the bot. The bot is **public** — anyone who finds it can use it.
-- **Operator:** The project owner, who runs and pays for the bot.
-
-There are no user accounts, roles, or onboarding beyond Telegram itself.
+| Goal | Success Metric |
+|------|----------------|
+| Reply to any user message with AI | User sends text and receives an OpenAI-generated reply in the same chat |
+| Stateless one-shot answers | Each message answered fresh, with no memory of prior messages |
+| Basic command UX | `/start` and `/help` return helpful text |
+| Survive errors gracefully | LLM/network failure yields a friendly message, not a crash or silence |
+| Handle concurrent users | A slow reply for one user does not block other users |
+| Single-poller safety | Exactly one poller per token; no 409 conflicts in logs |
+| Run 24/7 | Bot runs continuously on a DO droplet and auto-restarts on crash/reboot |
+| Reproducible deploys | Same Docker image runs locally and on the droplet; push to `main` auto-deploys |
+| Secret hygiene | No secrets in git history or the built image |
+| Cost-aware default | Default model `gpt-4o-mini` keeps per-message cost low |
 
 ---
 
 ## 4. Scope
 
-### 4.1 In scope (v1)
+### 4.1 In Scope (v1)
 
-- Receiving text messages and replying with an OpenAI-generated answer (one-shot, no memory)
-- `/start` and `/help` commands
-- Baseline reliability: graceful error handling, concurrent request handling, single-poller safety
-- Dockerized deployment to a DigitalOcean droplet, running 24/7
-- Automated CI/CD deployment on push to `main`
+- **Core messaging**: receive text via long polling → one-shot OpenAI call → reply in chat
+- **Commands**: `/start` (welcome), `/help` (usage)
+- **Reliability baseline**: graceful error replies, async/concurrent handling, single-poller safety
+- **Deployment**: Dockerized, 24/7 on a DigitalOcean droplet with auto-restart, secrets via env
+- **CI/CD**: push to `main` → GitHub Actions builds the image and deploys to the droplet
 
-### 4.2 Out of scope (explicitly excluded)
+### 4.2 Out of Scope
 
-| Excluded | Reason |
-|----------|--------|
+| Feature | Reason |
+|---------|--------|
 | Multi-provider / swappable LLM abstraction | Wired directly to OpenAI for v1 simplicity; switching providers later is a deliberate code change |
 | Webhook delivery | Polling is simpler, needs no domain/HTTPS, and matches prior experience |
 | Multimodal input (images, voice, files) | Text-only for v1; large surface area, needs vision/transcription |
@@ -53,163 +55,199 @@ There are no user accounts, roles, or onboarding beyond Telegram itself.
 | Group-chat support | Cost/abuse multiplier; wait until rate limiting exists |
 | Per-user model selection / inline settings | Depends on conversation state, which v1 does not have |
 
-### 4.3 Deferred to a later release (v2)
+### 4.3 Deferred (v2)
 
-- **Bot UX:** typing indicator with keepalive; splitting replies over Telegram's 4096-char limit; non-text input guard
-- **Cost & abuse controls:** cheap-model default + max-token clamp + billing cap; per-user rate limiting; global daily usage cap
-- **Conversation:** multi-turn memory; configurable persona / system prompt
-
----
-
-## 5. Functional Requirements
-
-Each requirement is user-centric, atomic, and testable. IDs are referenced by the roadmap (Section 9).
-
-### Core Messaging
-- **MSG-01** — Bot receives text messages from any Telegram user via long polling.
-- **MSG-02** — Each text message is sent to OpenAI as a one-shot prompt (no conversation history).
-- **MSG-03** — The LLM's reply is sent back to the user in the same chat.
-
-### Commands
-- **CMD-01** — `/start` returns a short welcome explaining what the bot does.
-- **CMD-02** — `/help` returns brief usage guidance.
-
-### LLM Integration
-- **LLM-01** — Bot calls the OpenAI (ChatGPT) API directly to generate each reply; the model name is configurable via an environment variable, defaulting to `gpt-4o-mini`.
-
-### Reliability (non-functional baseline)
-- **REL-01** — On LLM/network error or timeout, the bot replies with a friendly error message instead of going silent or crashing.
-- **REL-02** — A slow LLM call for one user does not block replies to other users (async / concurrent handling).
-- **REL-03** — Exactly one polling instance runs per bot token (no 409 "terminated by other getUpdates" conflicts).
-
-### Deployment & Operations
-- **DEP-01** — The bot runs in a Docker container; the same image runs locally and on the droplet.
-- **DEP-02** — The bot runs 24/7 on a DigitalOcean droplet and auto-restarts on crash or reboot.
-- **DEP-03** — Secrets (Telegram token, OpenAI key) are provided via environment only — never committed to git or baked into the image.
-- **DEP-04** — Pushing to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet.
-
-**Total: 13 v1 requirements.**
+- **Bot UX**: typing indicator with keepalive; split replies over Telegram's 4096-char limit; non-text input guard
+- **Cost & abuse controls**: max-token clamp + dashboard billing cap; per-user rate limiting; global daily usage cap
+- **Conversation**: multi-turn memory; configurable persona / system prompt
 
 ---
 
-## 6. Technical Approach
-
-The recommended stack and architecture below are backed by domain research (full findings in `.planning/research/`, overall confidence: **HIGH**).
-
-### 6.1 Stack
-
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
-| Language | **Python 3.12** | Dominant ecosystem for Telegram bots + LLM SDKs; widest battle-tested library support |
-| Telegram | **python-telegram-bot 22.7** | Owns the polling loop (`getUpdates`, offset tracking, retries, graceful shutdown); built-in `run_polling()` matches the polling decision exactly |
-| LLM | **openai 2.41.1** (`AsyncOpenAI`), default model **`gpt-4o-mini`** | Official async SDK; integrates cleanly with the bot's asyncio loop. Cheap, fast default keeps per-message cost low (changeable via env var) |
-| Packaging | **Docker** (`python:3.12-slim`) | Same image runs locally and in production; glibc compatibility, prebuilt wheels |
-| Hosting | **DigitalOcean droplet** (~$4–6/mo) | Cheap, full control; `restart: unless-stopped` for 24/7 uptime |
-| CI/CD | **GitHub Actions → GHCR → SSH deploy** | Build + push image to GitHub Container Registry, then deploy to droplet via SSH; canonical pattern |
-
-### 6.2 How it works (data flow)
+## 5. System Architecture
 
 ```
-Telegram user → (long polling) → Bot handler → OpenAI ChatGPT API → reply text → Telegram user
+Telegram user
+   │  text message
+   ▼  (long polling — getUpdates)
+┌──────────────────────────────┐
+│  Telegram Bot (PTB)          │  main.py / handlers.py
+│  - /start, /help             │
+│  - text handler (async,      │
+│    concurrent_updates=True)  │
+└──────────────┬───────────────┘
+               │  user text → one-shot prompt
+               ▼
+┌──────────────────────────────┐
+│  OpenAI ChatGPT API          │  model = gpt-4o-mini (env var)
+│  (chat completions)          │  timeout + error handling
+└──────────────┬───────────────┘
+               │  reply text
+               ▼
+┌──────────────────────────────┐
+│  Telegram Bot (send)         │ ─────► user
+└──────────────────────────────┘
+
+Deployment / delivery
+─────────────────────
+  push to `main`
+        │
+        ▼  GitHub Actions: build image → push to GHCR
+        │
+        ▼  SSH to droplet → docker compose pull && up -d
+┌──────────────────────────────┐
+│  DigitalOcean Droplet        │
+│  Docker container            │  restart: unless-stopped (24/7)
+│  secrets via .env (runtime)  │  stop old container before new (no 409)
+└──────────────────────────────┘
 ```
 
-The bot is **stateless per message**: it holds no conversation history. The polling library manages the connection to Telegram; each incoming message triggers a single OpenAI API call whose response is returned to the user.
-
-### 6.3 Reliability design
-
-- **Async throughout** with concurrent update handling, so one slow OpenAI call (2–30s) does not block other users (REL-02).
-- **Typed error handling** on the OpenAI call: explicit request timeout, retry on transient/rate-limit errors with backoff, friendly fallback reply on final failure (REL-01).
-- **Single-instance discipline:** exactly one poller per token; a separate bot token for local development; deploys stop the old container before starting the new one (REL-03).
-
-### 6.4 Deployment & operations
-
-- Single-stage `python:3.12-slim` image; secrets injected at runtime via environment (never in git or the image) (DEP-03).
-- `docker compose` with `restart: unless-stopped` for crash/reboot survival (DEP-02).
-- GitHub Actions builds on push to `main`, pushes to GHCR, and deploys to the droplet over SSH, stopping the old container before starting the new (DEP-04, and avoids REL-03 conflicts during release).
+The bot holds **no application state** — the polling library tracks the Telegram update offset internally, and each message triggers a single, independent OpenAI call.
 
 ---
 
-## 7. Known Limitations & Risks (v1)
+## 6. Features & Requirements
 
-These are **accepted trade-offs** of the minimal v1 scope, not defects:
+Requirement IDs trace to `.planning/REQUIREMENTS.md` and the roadmap (§10).
 
-1. **Long replies may fail to send.** Telegram rejects single messages over 4096 characters, and v1 does not split replies. Very long answers will fail. *First candidate to fix (v2: UX-02).*
-2. **Unbounded cost.** The bot is public with no rate limits or spend caps. Strangers' messages incur OpenAI token cost with no ceiling. **Recommended near-free mitigation before launch:** set a hard billing cap in the OpenAI dashboard (configuration, not code) and use a low-cost model by default.
-3. **No conversation memory.** Each message is independent; the bot cannot follow up on prior context. *Intentional for v1 (v2: CONV-01).*
+### F1 — Core Messaging
+
+| ID | Requirement |
+|----|-------------|
+| MSG-01 | Receive text messages from any Telegram user via long polling |
+| MSG-02 | Send each text message to OpenAI as a one-shot prompt (no conversation history) |
+| MSG-03 | Send the LLM's reply back to the user in the same chat |
+
+### F2 — Commands
+
+| ID | Requirement |
+|----|-------------|
+| CMD-01 | `/start` returns a short welcome explaining what the bot does |
+| CMD-02 | `/help` returns brief usage guidance |
+
+### F3 — LLM Integration
+
+| ID | Requirement |
+|----|-------------|
+| LLM-01 | Call the OpenAI (ChatGPT) API directly to generate each reply; model name configurable via env var, defaulting to `gpt-4o-mini` |
+
+### F4 — Reliability
+
+| ID | Requirement |
+|----|-------------|
+| REL-01 | On LLM/network error or timeout, reply with a friendly error message instead of going silent or crashing |
+| REL-02 | A slow LLM call for one user does not block replies to other users (async / concurrent handling) |
+| REL-03 | Exactly one polling instance runs per bot token (no 409 "terminated by other getUpdates" conflicts) |
+
+### F5 — Deployment & Operations
+
+| ID | Requirement |
+|----|-------------|
+| DEP-01 | Run in a Docker container; the same image runs locally and on the droplet |
+| DEP-02 | Run 24/7 on a DigitalOcean droplet and auto-restart on crash or reboot |
+| DEP-03 | Provide secrets via environment only — never committed to git or baked into the image |
+| DEP-04 | Push to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet |
 
 ---
 
-## 8. Success Metrics (Definition of Done for v1)
+## 7. Configuration Reference
 
-The v1 release is "done" when:
+All configuration is via environment variables (e.g. a `.env` file locally and on the droplet).
 
-- A real Telegram user can message the public bot and reliably receive a correct OpenAI-generated reply.
-- The bot runs unattended 24/7 on the droplet and recovers automatically from crashes/reboots.
-- A push to `main` deploys the new version with no manual server steps.
-- No secrets appear in git history or the built image.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `TELEGRAM_BOT_TOKEN` | Yes | — | Bot token from @BotFather |
+| `OPENAI_API_KEY` | Yes | — | OpenAI API key |
+| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name |
+| `OPENAI_REQUEST_TIMEOUT` | No | `60` | Seconds before an LLM call times out |
+| `LOG_LEVEL` | No | `INFO` | Logging verbosity |
+
+The bot **fails fast at boot** if a required variable is missing.
 
 ---
 
-## 9. Phased Delivery Plan (Roadmap)
+## 8. Non-Functional Requirements
 
-Structured as a **Vertical MVP**: deliver a working bot first, then harden, then deploy, then automate. Each phase leaves the bot demonstrably more capable. All 13 requirements are mapped; coverage is complete.
+| NFR | Requirement |
+|-----|-------------|
+| Reliability | Bot auto-restarts on crash/reboot (Docker `restart: unless-stopped`) |
+| Concurrency | Async handling; one slow LLM call does not block other users |
+| Security | Secrets via environment only; never in git history or the image |
+| Portability | Same Docker image runs locally and on the droplet (Python 3.12 / Linux) |
+| Cost control | Low-cost default model (`gpt-4o-mini`); see §9 for the accepted unbounded-cost risk |
+| Dependencies | `python-telegram-bot`, `openai` |
+
+---
+
+## 9. Known Limitations & Risks (v1)
+
+Accepted trade-offs of the minimal v1 scope — not defects:
+
+1. **Long replies may fail to send.** Telegram rejects single messages over 4096 characters and v1 does not split replies, so very long answers will fail. *First candidate to fix (v2).*
+2. **Unbounded cost.** The bot is public with no rate limits or spend caps. Strangers' messages incur OpenAI token cost with no ceiling. **Recommended near-free mitigation before launch:** set a hard billing cap in the OpenAI dashboard (configuration, not code); the `gpt-4o-mini` default already keeps per-message cost low.
+3. **No conversation memory.** Each message is independent; the bot cannot follow up on prior context. *Intentional for v1 (v2).*
+
+---
+
+## 10. Delivery Plan (Roadmap)
+
+Structured as a **Vertical MVP**: deliver a working bot first, then harden, then deploy, then automate. All 13 requirements are mapped; coverage is complete. Execution order: 1 → 2 → 3 → 4.
 
 ### Phase 1 — Working AI Bot
-**Goal:** Anyone on Telegram can send a text message and get a useful ChatGPT reply, including `/start` and `/help`.
+**Goal:** Anyone on Telegram can send a text message and get a ChatGPT reply, including `/start` and `/help`.
 **Requirements:** MSG-01, MSG-02, MSG-03, CMD-01, CMD-02, LLM-01
-**Success criteria:**
-1. A user sends a text message and receives an OpenAI-generated reply in the same chat.
-2. Each message is answered as a fresh one-shot prompt (no memory).
-3. `/start` returns a welcome; `/help` returns usage guidance.
-4. The model name is read from an env var; the bot fails fast at boot if the token or key is missing.
+**Success criteria:** user receives an OpenAI reply in-chat; each message is a fresh one-shot prompt; `/start` and `/help` work; model from env var; fails fast at boot if token/key missing.
 
 ### Phase 2 — Reliability Hardening
-**Goal:** The working bot survives real public traffic — responsive under slow calls, recovers from errors, never runs duplicate pollers.
+**Goal:** The working bot survives real public traffic.
 **Requirements:** REL-01, REL-02, REL-03
-**Success criteria:**
-1. On OpenAI error/timeout, the user gets a friendly message instead of silence or a crash.
-2. A slow reply for one user does not delay other users.
-3. Only one poller runs per token — no 409 conflicts in the logs.
+**Success criteria:** friendly error on OpenAI failure; a slow reply doesn't delay other users; only one poller per token (no 409 in logs).
 
 ### Phase 3 — Containerize & Run 24/7
-**Goal:** The same Docker image runs locally and on the droplet, stays up 24/7, auto-restarts, with secrets injected at runtime.
+**Goal:** Same image local + droplet, always up, secrets at runtime.
 **Requirements:** DEP-01, DEP-02, DEP-03
-**Success criteria:**
-1. The same image runs identically locally and on the droplet.
-2. The bot runs continuously and auto-restarts after crash/reboot.
-3. Secrets are supplied via env at runtime and appear neither in git history nor in the image.
+**Success criteria:** identical image local and on droplet; runs continuously and auto-restarts; secrets via env, absent from git and image.
 
 ### Phase 4 — CI/CD Auto-Deploy
-**Goal:** A push to `main` automatically builds and deploys the new version, no manual SSH/Docker steps.
+**Goal:** Push to `main` builds and deploys automatically.
 **Requirements:** DEP-04
-**Success criteria:**
-1. Pushing to `main` triggers a GitHub Actions build + droplet deploy.
-2. After a successful run, the droplet runs the newly built version.
-3. The old container stops before the new one starts (no 409 during release).
-
-**Execution order:** 1 → 2 → 3 → 4.
+**Success criteria:** push triggers build + droplet deploy; droplet runs the new version; old container stops before new starts (no 409 during release).
 
 ---
 
-## 10. Key Decisions
+## 11. Key Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| LLM provider = OpenAI (ChatGPT) | Owner's choice; mainstream, well-documented API |
-| Call OpenAI API directly (no provider abstraction) | Simplicity for v1; reverses an earlier adapter plan. Swapping providers later is a deliberate code change |
-| One-shot replies, no conversation memory | Simplicity for v1 |
-| Public access with no guardrails | Owner wants a lean v1 (accepted cost risk; see §7) |
-| Polling over webhook | No domain/TLS needed; matches owner's prior self-hosting experience |
-| DigitalOcean droplet + Docker over App Platform | Cheap, portable, full control |
-| CI/CD via GitHub Actions in v1 | Push-button deploys to the droplet on push to `main` |
-| Vertical MVP phase structure | Get a working bot first, then harden and deploy |
+| LLM provider = OpenAI (ChatGPT) | Mainstream, well-documented API |
+| Call OpenAI directly (no provider abstraction) | Simplicity for v1; switching providers later is a deliberate code change |
+| Default model = `gpt-4o-mini` | Low cost / fast; mitigates the public-bot cost risk |
+| One-shot replies, no memory | Simplicity for v1 |
+| Public access, no guardrails | Lean v1 (accepted cost risk; see §9) |
+| Polling over webhook | No domain/TLS needed; matches prior self-hosting experience |
+| DigitalOcean droplet + Docker | Cheap, portable, full control |
+| CI/CD via GitHub Actions | Push-button deploys to the droplet on push to `main` |
+| Vertical MVP phase structure | Working bot first, then harden and deploy |
 
 ---
 
-## 11. Open Questions / Pre-Build Checklist
+## 12. Deployment
 
-- **OpenAI billing cap value** — operational decision; should be set in the OpenAI dashboard before the bot goes live (Phase 3/4).
-- **Default model** — decided: `gpt-4o-mini` (low cost/fast), set via env var; revisit if answer quality proves insufficient.
+```bash
+# Configure environment
+cp .env.example .env
+# set TELEGRAM_BOT_TOKEN and OPENAI_API_KEY (OPENAI_MODEL optional)
+
+# Build and run locally with Docker
+docker compose up --build
+```
+
+**Production (DigitalOcean droplet):** the droplet runs the same image via `docker compose up -d` with `restart: unless-stopped` for 24/7 uptime. GitHub Actions deploys on push to `main` — build the image, push to GHCR, SSH to the droplet, and `docker compose pull && up -d`, stopping the old container before starting the new one (avoids a 409 polling conflict during release). App secrets live in the droplet's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
+
+---
+
+## 13. Open Questions / Pre-Build Checklist
+
+- **OpenAI billing cap value** — operational decision; set in the OpenAI dashboard before going live (Phase 3/4).
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
 - **Sign-off** — approval of this PRD is the gate before implementation starts.
 
