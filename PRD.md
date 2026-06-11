@@ -42,7 +42,8 @@ People increasingly want quick AI answers, but switching to a separate app or we
 - **Commands**: `/start` (welcome), `/help` (usage)
 - **Reliability baseline**: graceful error replies, async/concurrent handling, single-poller safety
 - **Deployment**: Dockerized, 24/7 on a DigitalOcean droplet with auto-restart, secrets via env
-- **CI/CD**: push to `main` → GitHub Actions builds the image and deploys to the droplet
+- **CI/CD**: CI checks (lint, type-check, tests, build) on every push/PR; push to `main` → GitHub Actions builds the image and deploys to the droplet when CI passes
+- **Quality**: automated test suite + lint/type-check gating deployment
 
 ### 4.2 Out of Scope
 
@@ -147,6 +148,13 @@ Requirement IDs trace to `.planning/REQUIREMENTS.md` and the roadmap (§10).
 | DEP-03 | Provide secrets via environment only — never committed to git or baked into the image |
 | DEP-04 | Push to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet |
 
+### F6 — Quality & CI
+
+| ID | Requirement |
+|----|-------------|
+| QA-01 | An automated test suite (`pytest`) covers core message handling and the OpenAI call path |
+| QA-02 | A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests, and a Docker build check on every push and pull request; deployment proceeds only when CI passes |
+
 ---
 
 ## 7. Configuration Reference
@@ -208,9 +216,9 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 **Success criteria:** identical image local and on droplet; runs continuously and auto-restarts; secrets via env, absent from git and image.
 
 ### Phase 4 — CI/CD Auto-Deploy
-**Goal:** Push to `main` builds and deploys automatically.
-**Requirements:** DEP-04
-**Success criteria:** push triggers build + droplet deploy; droplet runs the new version; old container stops before new starts (no 409 during release).
+**Goal:** Push to `main` runs CI checks, then builds and deploys automatically when they pass.
+**Requirements:** DEP-04, QA-01, QA-02
+**Success criteria:** `pytest` suite covers core handling and the OpenAI path; CI runs lint/type-check/tests/build on every push & PR and fails on any error; push to `main` builds + deploys only when CI is green; droplet runs the new version; old container stops before new starts (no 409 during release).
 
 ---
 
@@ -389,7 +397,7 @@ CD should run only when CI is green. Two common ways:
 
 - **OpenAI billing cap value** — operational decision; set in the OpenAI dashboard before going live (Phase 3/4).
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
-- **CI is a scope addition.** The CI pipeline (§13.1) assumes a **test suite** (`pytest`) and **lint/type tooling** (`ruff`, `mypy`) exist. None are in the current v1 requirements or roadmap (DEP-04 / Phase 4 cover deploy only). Adding meaningful CI means committing to writing tests and adopting those tools — confirm whether that's in v1 scope, and if so add it to REQUIREMENTS.md and Phase 4.
+- **CI tooling choices.** CI (QA-01, QA-02, now in v1 scope under Phase 4) commits the project to a `pytest` test suite and `ruff`/`mypy` tooling. The exact lint/type-check strictness and the minimum test coverage to enforce are finalized during Phase 4.
 - **Sign-off** — approval of this PRD is the gate before implementation starts.
 
 ---

@@ -35,6 +35,11 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DEP-03**: Secrets (Telegram token, LLM API keys) are provided via environment only — never committed to git or baked into the image
 - [ ] **DEP-04**: Pushing to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet
 
+### Quality & CI
+
+- [ ] **QA-01**: An automated test suite (`pytest`) covers core message handling and the OpenAI call path
+- [ ] **QA-02**: A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests (`pytest`), and a Docker build check on every push and pull request; deployment to the droplet proceeds only when CI passes
+
 ## v2 Requirements
 
 Deferred to a future release. Tracked but not in the current roadmap.
@@ -95,12 +100,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-02 | Phase 3 | Pending |
 | DEP-03 | Phase 3 | Pending |
 | DEP-04 | Phase 4 | Pending |
+| QA-01 | Phase 4 | Pending |
+| QA-02 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 13 total
-- Mapped to phases: 13 ✓
+- v1 requirements: 15 total
+- Mapped to phases: 15 ✓
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-11*
-*Last updated: 2026-06-11 after roadmap creation (traceability mapped to 4 phases)*
+*Last updated: 2026-06-11 — added Quality & CI requirements (QA-01, QA-02) to Phase 4*

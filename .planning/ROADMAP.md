@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Working AI Bot** - A real Telegram bot replies to messages via OpenAI, end-to-end
 - [ ] **Phase 2: Reliability Hardening** - Bot stays responsive and stable under real public traffic
 - [ ] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a DigitalOcean droplet, always up
-- [ ] **Phase 4: CI/CD Auto-Deploy** - Pushing to `main` builds and deploys the bot automatically
+- [ ] **Phase 4: CI/CD Auto-Deploy** - Pushing to `main` runs CI checks, then builds and deploys the bot automatically
 
 ## Phase Details
 
@@ -55,14 +55,16 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 ### Phase 4: CI/CD Auto-Deploy
-**Goal**: A push to `main` automatically builds the image and deploys the new version to the droplet, with no manual SSH or Docker steps.
+**Goal**: A push to `main` runs automated checks (lint, type-check, tests, build) and, when they pass, automatically builds the image and deploys the new version to the droplet — with no manual SSH or Docker steps.
 **Mode:** mvp
 **Depends on**: Phase 3
-**Requirements**: DEP-04
+**Requirements**: DEP-04, QA-01, QA-02
 **Success Criteria** (what must be TRUE):
-  1. Pushing to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet
-  2. After a successful pipeline run, the droplet is running the newly built version of the bot
-  3. The deploy stops the old container before starting the new one, so no 409 polling conflict occurs during release
+  1. An automated test suite (`pytest`) covers core message handling and the OpenAI call path
+  2. A CI workflow runs lint (`ruff`), type-check (`mypy`), tests, and a Docker build check on every push and pull request, and fails the run if any check fails
+  3. Pushing to `main` triggers the pipeline that builds the image and deploys it to the droplet only when CI passes
+  4. After a successful pipeline run, the droplet is running the newly built version of the bot
+  5. The deploy stops the old container before starting the new one, so no 409 polling conflict occurs during release
 **Plans**: TBD
 
 ## Progress
