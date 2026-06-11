@@ -23,7 +23,8 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 - [ ] Bot receives text messages from Telegram users via polling
 - [ ] Each user message is sent to the OpenAI (ChatGPT) API and the reply is returned in Telegram (one-shot, no history)
 - [ ] Bot runs containerized with Docker and stays up 24/7 on a DigitalOcean droplet
-- [ ] CI/CD pipeline (GitHub Actions) builds the image and deploys to the droplet on push to `main`
+- [ ] Automated tests (`pytest`) plus a CI workflow (lint, type-check, tests, build) gate every push/PR
+- [ ] CI/CD pipeline (GitHub Actions) builds the image and deploys to the droplet on push to `main` when CI passes
 
 ### Out of Scope
 
@@ -64,6 +65,7 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 | Polling over webhook | No domain/TLS needed; matches user's prior self-hosting experience | — Pending |
 | DigitalOcean droplet + Docker over App Platform | Cheap (~$4–6/mo), portable, full control | — Pending |
 | CI/CD via GitHub Actions in v1 | Push-button deploys to the droplet on push to `main` | — Pending |
+| Add tests + CI gate (pytest, ruff, mypy) in v1 | Catch breakage before it deploys; CI must pass before release | — Pending |
 
 ## Evolution
 
@@ -83,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-11 after initialization*
+*Last updated: 2026-06-11 — added tests + CI gate to v1 scope*
