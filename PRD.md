@@ -1,11 +1,9 @@
 # Product Requirements Document — Telegram AI Bot
 
-**Status:** Draft for review
-**Author:** seyhaboth
+**Status:** Draft
 **Date:** 2026-06-11
-**Reviewer:** Advisor (pending sign-off)
 
-> This PRD consolidates the project's vision, scope, requirements, technical approach, and phased delivery plan into a single document for advisor review **before implementation begins**. It is derived from the detailed planning artifacts in `.planning/` (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and domain research).
+> This PRD consolidates the project's vision, scope, requirements, technical approach, and phased delivery plan into a single document **for review before implementation begins**. It is derived from the detailed planning artifacts in `.planning/` (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, and domain research).
 
 ---
 
@@ -213,7 +211,7 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 - **OpenAI billing cap value** — operational decision; should be set in the OpenAI dashboard before the bot goes live (Phase 3/4).
 - **Default model** — decided: `gpt-4o-mini` (low cost/fast), set via env var; revisit if answer quality proves insufficient.
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
-- **Advisor sign-off** — approval of this PRD is the gate before implementation starts.
+- **Sign-off** — approval of this PRD is the gate before implementation starts.
 
 ---
 
