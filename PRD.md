@@ -262,7 +262,86 @@ The droplet runs the container with `restart: unless-stopped` for 24/7 uptime. A
 
 ---
 
-## 13. Open Questions / Pre-Build Checklist
+## 13. CI/CD Pipeline
+
+The pipeline lives in `.github/workflows/deploy.yml` and runs on GitHub-hosted runners. It turns a `git push` into a live deploy with no manual steps.
+
+### 13.1 Trigger
+
+- Runs on **push to `main`** only.
+- (Optional, recommended) also allow **manual run** via `workflow_dispatch` so you can redeploy without a code change.
+
+### 13.2 Workflow steps
+
+**Job 1 — Build & publish image**
+1. **Checkout** the repository (`actions/checkout`).
+2. **Log in to GHCR** using the built-in `GITHUB_TOKEN` (no extra secret needed).
+3. **Build the Docker image** from the `Dockerfile`.
+4. **Tag** the image (e.g. `ghcr.io/<owner>/telegram-ai-bot:latest` and the commit SHA).
+5. **Push** the image to GHCR.
+
+**Job 2 — Deploy to droplet** *(runs after Job 1 succeeds)*
+6. **SSH into the droplet** (`appleboy/ssh-action`) using stored SSH secrets.
+7. **Pull the new image**: `docker compose pull`.
+8. **Restart cleanly**: `docker compose up -d` — Compose **stops the old container before starting the new one**, so only one poller runs at a time (avoids the 409 conflict, REL-03).
+9. **(Optional) prune** old images to reclaim disk: `docker image prune -f`.
+
+### 13.3 Secrets
+
+| Secret (GitHub repo) | Purpose |
+|----------------------|---------|
+| `GITHUB_TOKEN` (built-in) | Push image to GHCR |
+| `DROPLET_HOST` | Droplet IP / hostname |
+| `DROPLET_USER` | SSH user |
+| `DROPLET_SSH_KEY` | Private SSH deploy key (ED25519) |
+
+> **App secrets are not in CI.** `TELEGRAM_BOT_TOKEN` and `OPENAI_API_KEY` live only in the droplet's `.env`. The pipeline never sees them — it only moves and restarts the image.
+
+### 13.4 Sketch of `deploy.yml`
+
+```yaml
+name: deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd ~/telegram-ai-bot
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+```
+
+> This is an illustrative sketch for the PRD, not the final file — exact action versions and paths are finalized during Phase 4.
+
+---
+
+## 14. Open Questions / Pre-Build Checklist
 
 - **OpenAI billing cap value** — operational decision; set in the OpenAI dashboard before going live (Phase 3/4).
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
