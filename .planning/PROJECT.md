@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A public Telegram bot that acts as a general-purpose AI assistant. A user sends a text message, the bot forwards it to an LLM, and the LLM's reply is sent straight back in the chat. It's for anyone on Telegram who wants quick AI answers without leaving the app.
+A public Telegram bot that acts as a general-purpose AI assistant. A user sends a text message, the bot forwards it to the OpenAI (ChatGPT) API, and the reply is sent straight back in the chat. It's for anyone on Telegram who wants quick AI answers without leaving the app.
 
 ## Core Value
 
@@ -21,8 +21,7 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 <!-- Current scope. Building toward these. -->
 
 - [ ] Bot receives text messages from Telegram users via polling
-- [ ] Each user message is sent to an LLM and the reply is returned in Telegram (one-shot, no history)
-- [ ] LLM provider is swappable via an env var through a hand-rolled adapter, defaulting to OpenAI (ChatGPT)
+- [ ] Each user message is sent to the OpenAI (ChatGPT) API and the reply is returned in Telegram (one-shot, no history)
 - [ ] Bot runs containerized with Docker and stays up 24/7 on a DigitalOcean droplet
 - [ ] CI/CD pipeline (GitHub Actions) builds the image and deploys to the droplet on push to `main`
 
@@ -39,17 +38,17 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 ## Context
 
 - The user has previously self-hosted a "normal" (polling) Telegram bot, so the polling model is already familiar — no new delivery concepts to learn.
-- Provider-swap is an explicit priority: OpenAI is the default now, but switching to Claude or another provider should be a one-line env-var change plus an API key. This drives the adapter design.
+- Provider swapping was considered and dropped for v1: the bot calls the OpenAI (ChatGPT) API directly with no abstraction layer, for simplicity. Switching providers later is a deliberate code change, not a config flip.
 - The bot is public with no guardrails, so messages from strangers incur OpenAI token cost. This is an accepted, known risk for v1.
 - Deployment target is a DigitalOcean droplet (a Linux VPS) running the bot in Docker; the same container runs locally for dev/prod parity.
 
 ## Constraints
 
-- **Architecture**: LLM access sits behind a thin, hand-rolled adapter (one internal interface, per-provider implementations selected by env var). No heavy multi-provider framework (e.g. LiteLLM) for v1.
+- **Architecture**: Bot calls the OpenAI (ChatGPT) API directly — no provider abstraction layer for v1. Model name configurable via env var.
 - **Packaging**: Docker-containerized so the same image runs locally and on the droplet.
 - **Hosting**: DigitalOcean droplet using polling — no public URL, HTTPS, or domain required.
 - **Delivery**: CI/CD via GitHub Actions deploying to the droplet on push to `main`.
-- **Dependencies**: Telegram Bot API token; OpenAI API key (provider-swappable).
+- **Dependencies**: Telegram Bot API token; OpenAI API key.
 - **Cost**: Public access + no usage caps = unbounded LLM spend risk; accepted for v1.
 
 ## Key Decisions
@@ -59,7 +58,7 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | LLM provider = OpenAI (ChatGPT) | User's choice; mainstream, well-documented API | — Pending |
-| Provider behind a hand-rolled adapter (not LiteLLM) | Fewer dependencies for a small bot; still swappable via env var | — Pending |
+| Call OpenAI API directly (no provider abstraction) | User chose simplicity for v1; reverses earlier adapter plan. Swapping providers later is a deliberate code change | — Pending |
 | One-shot replies, no conversation memory | Simplicity for v1 | — Pending |
 | Public access with no guardrails | User wants a lean v1 | — Pending (cost risk) |
 | Polling over webhook | No domain/TLS needed; matches user's prior self-hosting experience | — Pending |
