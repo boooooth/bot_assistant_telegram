@@ -264,41 +264,68 @@ The droplet runs the container with `restart: unless-stopped` for 24/7 uptime. A
 
 ## 13. CI/CD Pipeline
 
-The pipeline lives in `.github/workflows/deploy.yml` and runs on GitHub-hosted runners. It turns a `git push` into a live deploy with no manual steps.
+CI and CD are split into **two GitHub Actions workflow files** under `.github/workflows/`:
 
-### 13.1 Trigger
+| File | Pipeline | Runs on | Purpose |
+|------|----------|---------|---------|
+| `ci.yml` | **CI** — Continuous Integration | every push + pull request | Quality gate: lint, type-check, run tests, verify the image builds |
+| `deploy.yml` | **CD** — Continuous Deployment | push to `main` | Build the image, push to GHCR, deploy to the droplet |
 
-- Runs on **push to `main`** only.
-- (Optional, recommended) also allow **manual run** via `workflow_dispatch` so you can redeploy without a code change.
+The split reflects their jobs: **CI proves the code is good; CD ships it.** CD runs only on `main` and is gated so it deploys only when CI is green.
 
-### 13.2 Workflow steps
+### 13.1 CI — `ci.yml`
+
+**Trigger:** every push and every pull request, so problems are caught before code reaches `main`.
+
+**Steps (the checks most projects run):**
+1. **Checkout** the repo (`actions/checkout`).
+2. **Set up Python 3.12** (`actions/setup-python`).
+3. **Install dependencies** (`pip install -r requirements.txt` plus dev tools).
+4. **Lint** — `ruff` (style and common-error checks).
+5. **Type-check** — `mypy` (catches type mistakes before runtime).
+6. **Run tests** — `pytest` (unit tests for handlers and the OpenAI call).
+7. **Build check** — `docker build` to confirm the image still builds.
+
+If any step fails the run goes red and, for pull requests, blocks the merge.
+
+Sketch of `ci.yml`:
+```yaml
+name: ci
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt ruff mypy pytest
+      - run: ruff check .
+      - run: mypy .
+      - run: pytest
+      - run: docker build -t telegram-ai-bot:ci .
+```
+
+### 13.2 CD — `deploy.yml`
+
+**Trigger:** push to `main` (optionally also a manual run via `workflow_dispatch`). Gated on CI passing.
 
 **Job 1 — Build & publish image**
-1. **Checkout** the repository (`actions/checkout`).
+1. **Checkout** the repository.
 2. **Log in to GHCR** using the built-in `GITHUB_TOKEN` (no extra secret needed).
 3. **Build the Docker image** from the `Dockerfile`.
-4. **Tag** the image (e.g. `ghcr.io/<owner>/telegram-ai-bot:latest` and the commit SHA).
+4. **Tag** the image (`:latest` + commit SHA).
 5. **Push** the image to GHCR.
 
 **Job 2 — Deploy to droplet** *(runs after Job 1 succeeds)*
 6. **SSH into the droplet** (`appleboy/ssh-action`) using stored SSH secrets.
 7. **Pull the new image**: `docker compose pull`.
 8. **Restart cleanly**: `docker compose up -d` — Compose **stops the old container before starting the new one**, so only one poller runs at a time (avoids the 409 conflict, REL-03).
-9. **(Optional) prune** old images to reclaim disk: `docker image prune -f`.
+9. **(Optional) prune** old images: `docker image prune -f`.
 
-### 13.3 Secrets
-
-| Secret (GitHub repo) | Purpose |
-|----------------------|---------|
-| `GITHUB_TOKEN` (built-in) | Push image to GHCR |
-| `DROPLET_HOST` | Droplet IP / hostname |
-| `DROPLET_USER` | SSH user |
-| `DROPLET_SSH_KEY` | Private SSH deploy key (ED25519) |
-
-> **App secrets are not in CI.** `TELEGRAM_BOT_TOKEN` and `OPENAI_API_KEY` live only in the droplet's `.env`. The pipeline never sees them — it only moves and restarts the image.
-
-### 13.4 Sketch of `deploy.yml`
-
+Sketch of `deploy.yml`:
 ```yaml
 name: deploy
 on:
@@ -337,7 +364,24 @@ jobs:
             docker image prune -f
 ```
 
-> This is an illustrative sketch for the PRD, not the final file — exact action versions and paths are finalized during Phase 4.
+### 13.3 Secrets
+
+| Secret (GitHub repo) | Used by | Purpose |
+|----------------------|---------|---------|
+| `GITHUB_TOKEN` (built-in) | `deploy.yml` | Push image to GHCR |
+| `DROPLET_HOST` | `deploy.yml` | Droplet IP / hostname |
+| `DROPLET_USER` | `deploy.yml` | SSH user |
+| `DROPLET_SSH_KEY` | `deploy.yml` | Private SSH deploy key (ED25519) |
+
+`ci.yml` needs **no secrets** — it only checks code. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live only in the droplet's `.env`; **neither pipeline ever sees them**.
+
+### 13.4 How CI gates CD
+
+CD should run only when CI is green. Two common ways:
+- **Two files (shown above)** — `deploy.yml` is triggered after `ci.yml` succeeds via a `workflow_run` trigger, or branch protection on `main` requires CI to pass before merge.
+- **One file** — fold the CI checks into `deploy.yml` as a first `test` job that the `build`/`deploy` jobs declare with `needs: test`.
+
+> These are illustrative sketches for the PRD, not the final files — exact action versions, the gating mechanism, and paths are finalized during Phase 4. CI assumes a test suite and lint/type tooling exist (see §14).
 
 ---
 
@@ -345,6 +389,7 @@ jobs:
 
 - **OpenAI billing cap value** — operational decision; set in the OpenAI dashboard before going live (Phase 3/4).
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
+- **CI is a scope addition.** The CI pipeline (§13.1) assumes a **test suite** (`pytest`) and **lint/type tooling** (`ruff`, `mypy`) exist. None are in the current v1 requirements or roadmap (DEP-04 / Phase 4 cover deploy only). Adding meaningful CI means committing to writing tests and adopting those tools — confirm whether that's in v1 scope, and if so add it to REQUIREMENTS.md and Phase 4.
 - **Sign-off** — approval of this PRD is the gate before implementation starts.
 
 ---
