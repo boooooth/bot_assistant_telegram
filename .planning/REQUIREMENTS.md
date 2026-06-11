@@ -20,7 +20,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### LLM Integration
 
-- [ ] **LLM-01**: Bot calls the OpenAI (ChatGPT) API directly to generate the reply for each message; the model name is configurable via an environment variable
+- [ ] **LLM-01**: Bot calls the OpenAI (ChatGPT) API directly to generate the reply for each message; the model name is configurable via an environment variable, defaulting to `gpt-4o-mini`
 
 ### Reliability
 

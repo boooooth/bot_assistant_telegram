@@ -1,7 +1,7 @@
 # Product Requirements Document — Telegram AI Bot
 
 **Status:** Draft for review
-**Author:** Project owner
+**Author:** seyhaboth
 **Date:** 2026-06-11
 **Reviewer:** Advisor (pending sign-off)
 
@@ -77,7 +77,7 @@ Each requirement is user-centric, atomic, and testable. IDs are referenced by th
 - **CMD-02** — `/help` returns brief usage guidance.
 
 ### LLM Integration
-- **LLM-01** — Bot calls the OpenAI (ChatGPT) API directly to generate each reply; the model name is configurable via an environment variable.
+- **LLM-01** — Bot calls the OpenAI (ChatGPT) API directly to generate each reply; the model name is configurable via an environment variable, defaulting to `gpt-4o-mini`.
 
 ### Reliability (non-functional baseline)
 - **REL-01** — On LLM/network error or timeout, the bot replies with a friendly error message instead of going silent or crashing.
@@ -104,7 +104,7 @@ The recommended stack and architecture below are backed by domain research (full
 |-------|--------|-----------|
 | Language | **Python 3.12** | Dominant ecosystem for Telegram bots + LLM SDKs; widest battle-tested library support |
 | Telegram | **python-telegram-bot 22.7** | Owns the polling loop (`getUpdates`, offset tracking, retries, graceful shutdown); built-in `run_polling()` matches the polling decision exactly |
-| LLM | **openai 2.41.1** (`AsyncOpenAI`) | Official async SDK; integrates cleanly with the bot's asyncio loop |
+| LLM | **openai 2.41.1** (`AsyncOpenAI`), default model **`gpt-4o-mini`** | Official async SDK; integrates cleanly with the bot's asyncio loop. Cheap, fast default keeps per-message cost low (changeable via env var) |
 | Packaging | **Docker** (`python:3.12-slim`) | Same image runs locally and in production; glibc compatibility, prebuilt wheels |
 | Hosting | **DigitalOcean droplet** (~$4–6/mo) | Cheap, full control; `restart: unless-stopped` for 24/7 uptime |
 | CI/CD | **GitHub Actions → GHCR → SSH deploy** | Build + push image to GitHub Container Registry, then deploy to droplet via SSH; canonical pattern |
@@ -211,7 +211,7 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 ## 11. Open Questions / Pre-Build Checklist
 
 - **OpenAI billing cap value** — operational decision; should be set in the OpenAI dashboard before the bot goes live (Phase 3/4).
-- **Default model** — confirm which OpenAI model to default to (cost vs. quality), set via env var.
+- **Default model** — decided: `gpt-4o-mini` (low cost/fast), set via env var; revisit if answer quality proves insufficient.
 - **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
 - **Advisor sign-off** — approval of this PRD is the gate before implementation starts.
 

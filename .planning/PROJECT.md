@@ -44,7 +44,7 @@ Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
 
 ## Constraints
 
-- **Architecture**: Bot calls the OpenAI (ChatGPT) API directly — no provider abstraction layer for v1. Model name configurable via env var.
+- **Architecture**: Bot calls the OpenAI (ChatGPT) API directly — no provider abstraction layer for v1. Model name configurable via env var, defaulting to `gpt-4o-mini` (low cost/fast).
 - **Packaging**: Docker-containerized so the same image runs locally and on the droplet.
 - **Hosting**: DigitalOcean droplet using polling — no public URL, HTTPS, or domain required.
 - **Delivery**: CI/CD via GitHub Actions deploying to the droplet on push to `main`.
