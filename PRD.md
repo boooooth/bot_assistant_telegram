@@ -232,6 +232,10 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 
 ## 12. Deployment
 
+### 12.1 Local development (manual)
+
+Run the bot on your own machine to develop and test. This is **not** how it reaches production — it's just the local dev loop.
+
 ```bash
 # Configure environment
 cp .env.example .env
@@ -241,7 +245,20 @@ cp .env.example .env
 docker compose up --build
 ```
 
-**Production (DigitalOcean droplet):** the droplet runs the same image via `docker compose up -d` with `restart: unless-stopped` for 24/7 uptime. GitHub Actions deploys on push to `main` — build the image, push to GHCR, SSH to the droplet, and `docker compose pull && up -d`, stopping the old container before starting the new one (avoids a 409 polling conflict during release). App secrets live in the droplet's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
+> Use a **separate BotFather token** for local testing so the laptop instance and the droplet never share a token (avoids a 409 polling conflict — see REL-03).
+
+### 12.2 Production deployment (automated CI/CD)
+
+Production deploys are **automatic** — no manual SSH or build steps. On every push to `main`, GitHub Actions:
+
+1. Builds the Docker image
+2. Pushes it to GHCR (GitHub Container Registry)
+3. SSHes into the DigitalOcean droplet
+4. Runs `docker compose pull && up -d`, **stopping the old container before starting the new one** (avoids a 409 conflict during release)
+
+The droplet runs the container with `restart: unless-stopped` for 24/7 uptime. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live in the droplet's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
+
+> One-time droplet setup (install Docker, clone repo / place `docker-compose.yml`, create `.env`) is manual; **every deploy after that is automatic** via the pipeline above.
 
 ---
 
