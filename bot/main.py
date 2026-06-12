@@ -22,6 +22,7 @@ def main() -> None:
     app.bot_data["complete"] = lambda text: openai_client.complete(
         settings.openai_model, settings.openai_api_key, text
     )
+    app.bot_data["allowed_chat_ids"] = settings.allowed_chat_ids
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))

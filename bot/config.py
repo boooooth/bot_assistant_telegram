@@ -26,6 +26,7 @@ class Settings:
     telegram_bot_token: str
     openai_api_key: str
     openai_model: str
+    allowed_chat_ids: frozenset[int]
 
 
 def load_settings() -> Settings:
@@ -33,6 +34,7 @@ def load_settings() -> Settings:
 
     Treats unset and blank/whitespace-only required variables as missing.
     ``OPENAI_MODEL`` is optional and defaults to ``gpt-4o-mini`` (LLM-01).
+    ``ALLOWED_CHAT_IDS`` is optional; when unset, all users are allowed.
     """
     missing = [
         name for name in REQUIRED_VARS if not (os.environ.get(name) or "").strip()
@@ -42,8 +44,16 @@ def load_settings() -> Settings:
             f"Missing required environment variable(s): {', '.join(missing)}"
         )
 
+    raw_ids = os.environ.get("ALLOWED_CHAT_IDS", "").strip()
+    allowed_chat_ids: frozenset[int] = (
+        frozenset(int(i.strip()) for i in raw_ids.split(",") if i.strip())
+        if raw_ids
+        else frozenset()
+    )
+
     return Settings(
         telegram_bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
         openai_api_key=os.environ["OPENAI_API_KEY"],
         openai_model=os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+        allowed_chat_ids=allowed_chat_ids,
     )
