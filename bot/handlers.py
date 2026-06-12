@@ -9,14 +9,20 @@ logger = logging.getLogger(__name__)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None:
+        return
     await update.message.reply_text(START_TEXT)
 
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None:
+        return
     await update.message.reply_text(HELP_TEXT)
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or update.effective_chat is None:
+        return
     chat_id = update.effective_chat.id
     logger.info("message from chat_id=%s", chat_id)
     try:
