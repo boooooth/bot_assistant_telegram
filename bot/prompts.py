@@ -5,8 +5,7 @@ SYSTEM_PROMPT = (
 )
 
 START_TEXT = (
-    "Hi! Send me any message and I'll answer using AI.\n"
-    "Type /help for usage info."
+    "Hi! Send me any message and I'll answer using AI.\nType /help for usage info."
 )
 
 HELP_TEXT = (

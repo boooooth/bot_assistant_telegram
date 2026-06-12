@@ -12,13 +12,19 @@ def _make_mock_response(content: str = "hello back"):
 
 
 def test_calls_acompletion_once():
-    with patch("bot.openai_client.litellm.acompletion", new=AsyncMock(return_value=_make_mock_response())) as mock:
+    with patch(
+        "bot.openai_client.litellm.acompletion",
+        new=AsyncMock(return_value=_make_mock_response()),
+    ) as mock:
         asyncio.run(complete("gpt-4o-mini", "test-key", "hello"))
         mock.assert_called_once()
 
 
 def test_messages_are_system_then_user():
-    with patch("bot.openai_client.litellm.acompletion", new=AsyncMock(return_value=_make_mock_response())) as mock:
+    with patch(
+        "bot.openai_client.litellm.acompletion",
+        new=AsyncMock(return_value=_make_mock_response()),
+    ) as mock:
         asyncio.run(complete("gpt-4o-mini", "test-key", "hello"))
         _, kwargs = mock.call_args
         messages = kwargs["messages"]
@@ -28,19 +34,28 @@ def test_messages_are_system_then_user():
 
 
 def test_model_is_passed_through():
-    with patch("bot.openai_client.litellm.acompletion", new=AsyncMock(return_value=_make_mock_response())) as mock:
+    with patch(
+        "bot.openai_client.litellm.acompletion",
+        new=AsyncMock(return_value=_make_mock_response()),
+    ) as mock:
         asyncio.run(complete("gpt-4o-mini", "test-key", "hello"))
         _, kwargs = mock.call_args
         assert kwargs["model"] == "gpt-4o-mini"
 
 
 def test_returns_content():
-    with patch("bot.openai_client.litellm.acompletion", new=AsyncMock(return_value=_make_mock_response("the answer"))):
+    with patch(
+        "bot.openai_client.litellm.acompletion",
+        new=AsyncMock(return_value=_make_mock_response("the answer")),
+    ):
         result = asyncio.run(complete("gpt-4o-mini", "test-key", "q"))
         assert result == "the answer"
 
 
 def test_none_content_returns_empty_string():
-    with patch("bot.openai_client.litellm.acompletion", new=AsyncMock(return_value=_make_mock_response(None))):
+    with patch(
+        "bot.openai_client.litellm.acompletion",
+        new=AsyncMock(return_value=_make_mock_response(None)),
+    ):
         result = asyncio.run(complete("gpt-4o-mini", "test-key", "q"))
         assert result == ""
