@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-12T01:56:38.642Z",
+  "phase": "01",
+  "phase_name": "working-ai-bot",
+  "phase_dir": ".planning/phases/01-working-ai-bot",
+  "plan": 2,
+  "task": 1,
+  "total_tasks": 4,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": "01-01/T1",
+      "name": "Scaffold project + secrets-hygiene files + dependencies",
+      "status": "done",
+      "commit": "c8ffea9"
+    },
+    {
+      "id": "01-01/T2",
+      "name": "Fail-fast config loader + Wave 0 config tests",
+      "status": "done",
+      "commit": "81d5275"
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": "01-02/T1",
+      "name": "Prompt + command copy (prompts.py)",
+      "status": "not_started"
+    },
+    {
+      "id": "01-02/T2",
+      "name": "Direct one-shot OpenAI client + MSG-02 test (openai_client.py + tests/test_openai_client.py)",
+      "status": "not_started"
+    },
+    {
+      "id": "01-02/T3",
+      "name": "Handlers + composition root + entrypoint + README (handlers.py, main.py, __main__.py, README.md)",
+      "status": "not_started"
+    },
+    {
+      "id": "01-02/T4",
+      "name": "Human checkpoint: live smoke test (requires TELEGRAM_BOT_TOKEN + OPENAI_API_KEY)",
+      "status": "not_started"
+    }
+  ],
+  "blockers": [
+    {
+      "description": "01-01-SUMMARY.md was not created — 01-02-PLAN.md's context block reads @.planning/phases/01-working-ai-bot/01-01-SUMMARY.md. Create it before executing Wave 2.",
+      "type": "technical",
+      "workaround": "Create 01-01-SUMMARY.md summarizing Wave 1 outcomes (config loader done, tests green, scaffold committed) before running 01-02."
+    }
+  ],
+  "human_actions_pending": [
+    {
+      "action": "Get a Telegram dev bot token from BotFather (/newbot) and an OpenAI API key from the OpenAI Dashboard",
+      "context": "Required for Wave 2 Task 4 live smoke checkpoint (MSG-01 → MSG-03 end-to-end cannot be tested any other way). Use a SEPARATE dev token from any future production token to avoid 409 conflicts (REL-03).",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Call OpenAI API directly with no provider abstraction (no LLMProvider Protocol, no factory, no anthropic import)",
+      "rationale": "User explicitly chose simplicity for v1; reverses earlier adapter plan",
+      "phase": "01"
+    },
+    {
+      "decision": "gpt-4o-mini default model via OPENAI_MODEL env var",
+      "rationale": "Cost-effective, fast; LLM-01",
+      "phase": "01"
+    },
+    {
+      "decision": "DO NOT enable concurrent_updates in Phase 1",
+      "rationale": "Concurrency hardening is Phase 2 scope; omit in main.py for now",
+      "phase": "01"
+    },
+    {
+      "decision": "Load .env via python-dotenv in __main__.py / main() before load_settings()",
+      "rationale": "Local dev reads .env; in production Docker containers real env vars override",
+      "phase": "01"
+    }
+  ],
+  "uncommitted_files": [
+    ".planning/STATE.md",
+    ".planning/config.json"
+  ],
+  "next_action": "Create .planning/phases/01-working-ai-bot/01-01-SUMMARY.md summarizing Wave 1 completion, then execute Wave 2 (01-02-PLAN.md) starting with Task 1: bot/prompts.py",
+  "context_notes": "Wave 1 is fully committed and green (pytest tests/test_config.py passes). Wave 2 is the E2E slice — prompts → OpenAI client → handlers → composition root. The human smoke test (Task 4) gates phase completion and requires live credentials. User paused at this point; model switched to Sonnet 4.6 for the execution phase."
+}
