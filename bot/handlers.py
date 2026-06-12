@@ -26,7 +26,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     chat_id = update.effective_chat.id
     allowed_chat_ids = context.bot_data.get("allowed_chat_ids", frozenset())
     if allowed_chat_ids and chat_id not in allowed_chat_ids:
-        await update.message.reply_text("Sorry, you are not authorized to use this bot.")
+        await update.message.reply_text(
+            "Sorry, you are not authorized to use this bot."
+        )
         logger.info("unauthorized access attempt from chat_id=%s", chat_id)
         return
     logger.info("message from chat_id=%s", chat_id)
