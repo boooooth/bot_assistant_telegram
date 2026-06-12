@@ -1,11 +1,12 @@
-from openai import AsyncOpenAI
+import litellm
 
 from .prompts import SYSTEM_PROMPT
 
 
-async def complete(client: AsyncOpenAI, model: str, user_text: str) -> str:
-    resp = await client.chat.completions.create(
+async def complete(model: str, api_key: str, user_text: str) -> str:
+    resp = await litellm.acompletion(
         model=model,
+        api_key=api_key,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_text},

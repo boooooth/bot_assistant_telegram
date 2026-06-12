@@ -1,7 +1,6 @@
 import logging
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
@@ -19,11 +18,9 @@ def main() -> None:
 
     settings = load_settings()
 
-    client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=60)
-
     app = ApplicationBuilder().token(settings.telegram_bot_token).build()
     app.bot_data["complete"] = lambda text: openai_client.complete(
-        client, settings.openai_model, text
+        settings.openai_model, settings.openai_api_key, text
     )
 
     app.add_handler(CommandHandler("start", start))
