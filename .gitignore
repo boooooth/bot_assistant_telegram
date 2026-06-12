@@ -1,0 +1,9 @@
+# Secrets — never commit real env values (Security V14)
+.env
+
+# Python cruft
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
