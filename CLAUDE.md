@@ -31,16 +31,15 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 |------------|---------|---------|-----------------|
 | Python | 3.12 (3.10+ required) | Implementation language | User already has Python 3.12/3.14 installed and prior polling-bot experience. Python is the dominant ecosystem for both Telegram bots and LLM SDKs — official, mature, first-party SDKs exist for OpenAI, Anthropic, and the Telegram Bot API. 3.12 is the sweet spot in 2026: fully supported by every dependency below, broad wheel availability, and a stable `slim` Docker image. (3.13/3.14 work too, but 3.12 has the widest battle-tested support.) |
 | python-telegram-bot (PTB) | 22.7 | Telegram Bot API wrapper + polling loop | The de-facto standard async Telegram library. Built-in `Application.run_polling()` is exactly the locked delivery model — no domain/TLS needed. Handles long-polling, retries, graceful shutdown (SIGTERM/SIGINT, important for Docker), and update dispatch out of the box. Pure-async (asyncio), actively maintained, requires Python 3.10+. |
-| openai | 2.41.1 | Default LLM provider SDK | Official first-party OpenAI Python SDK (v2 line). Async client (`AsyncOpenAI`) integrates cleanly with PTB's asyncio loop. Stable `chat.completions.create` / `responses.create` API, typed responses, built-in retries and `x-request-id` surfacing for debugging. This is the default behind the adapter. |
-| anthropic | 0.109.1 | Alternative LLM provider SDK | Official first-party Anthropic (Claude) SDK. Installed alongside `openai` so the env-var swap to Claude is genuinely one-line. Async client (`AsyncAnthropic`) mirrors the OpenAI ergonomics. Only the provider name in an env var changes at runtime. |
+| openai | 2.41.1 | LLM SDK (called directly) | Official first-party OpenAI Python SDK (v2 line). Async client (`AsyncOpenAI`) integrates cleanly with PTB's asyncio loop. Stable `chat.completions.create` API, typed responses, built-in retries and `x-request-id` surfacing for debugging. **v1 calls OpenAI directly — there is no provider abstraction layer.** Switching providers later (e.g. Claude) is a deliberate code change, not a config flip. |
 
 ### Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| python-dotenv | 1.x (latest) | Load `.env` in local dev | Local/dev parity only. Read `TELEGRAM_BOT_TOKEN`, `LLM_PROVIDER`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` from a `.env` file locally; in the container these come from real env vars / Docker `--env-file`. Keep it a dev convenience, not a runtime dependency for config. |
+| python-dotenv | 1.x (latest) | Load `.env` in local dev | Local/dev parity only. Read `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, `OPENAI_MODEL` from a `.env` file locally; in the container these come from real env vars / Docker `--env-file`. Keep it a dev convenience, not a runtime dependency for config. |
 | (stdlib) `logging` | builtin | Structured logging | No third-party logging lib needed for v1. Use stdlib `logging` at INFO, log incoming chat IDs (not message bodies, for privacy/cost-debugging) and LLM errors. PTB integrates with it natively. |
-| (stdlib) `asyncio` | builtin | Concurrency | PTB and both SDKs are async; the adapter interface should be `async`. No extra concurrency lib required. |
+| (stdlib) `asyncio` | builtin | Concurrency | PTB and the OpenAI SDK are async; the OpenAI call site should be `async` (`AsyncOpenAI`). No extra concurrency lib required. |
 
 ### Development Tools
 
@@ -56,15 +55,9 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 
 # Dev dependencies
 
-## Provider Adapter Structure (the locked "thin hand-rolled adapter")
+## LLM Call Structure (direct OpenAI — no adapter)
 
-# llm/base.py
-
-# llm/openai_provider.py
-
-# llm/anthropic_provider.py
-
-# llm/factory.py
+v1 calls the OpenAI SDK directly from a small, self-contained module (e.g. an `llm.py` / `openai_client.py`) — **no `LLMProvider` Protocol, no factory, no `llm/` package of providers.** The handler builds a one-shot prompt, calls `AsyncOpenAI`, and returns the text. This reverses the earlier adapter plan (see PROJECT.md Key Decisions and PRD §11).
 
 ## Docker Base Image
 
@@ -84,7 +77,7 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 |-------------|-------------|-------------------------|
 | python-telegram-bot 22.7 | aiogram 3.x | aiogram is excellent and slightly more modern in API; choose it if you prefer its router/filter style. PTB wins here on the user's prior familiarity and `run_polling()` simplicity. Either is a defensible standard. |
 | python-telegram-bot 22.7 | pyTelegramBotAPI (telebot) | Simpler but largely sync; weaker fit for async LLM calls. Use only for trivial sync scripts. |
-| Hand-rolled adapter | LiteLLM | LiteLLM is the right call when you need 5+ providers, unified streaming, fallbacks, and budget tracking. For two providers and one-shot calls it adds a heavy dependency and abstraction the project explicitly rejected. Revisit only if provider count or routing complexity grows. |
+| Direct OpenAI call | LiteLLM / provider adapter | LiteLLM or a hand-rolled adapter is the right call when you need multiple providers, unified streaming, fallbacks, or budget tracking. v1 deliberately calls OpenAI directly (one provider, one-shot calls) — no abstraction. Revisit only if a second provider or routing is actually needed. |
 | GHCR | DigitalOcean Container Registry | Use DOCR if you want registry and droplet in one vendor/VPC or hit GHCR rate/visibility limits. GHCR is cheaper and simpler for a single private repo. |
 | `appleboy/ssh-action` + compose | DigitalOcean App Platform | App Platform removes server management but costs more and was explicitly declined in favor of a cheap droplet with full control. |
 | `python:3.12-slim` | `python:3.12-alpine` | Alpine only if image size is critical AND you have no glibc-only wheels. For Python it routinely breaks/recompiles wheels (musl libc) — not worth it here. |
@@ -93,7 +86,7 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| LiteLLM (or any multi-provider framework) for v1 | Explicitly out of scope; heavy dependency for a 2-provider one-shot bot; obscures the simple adapter | Hand-rolled `LLMProvider` Protocol + per-provider class |
+| LiteLLM / any multi-provider framework / provider adapter for v1 | Explicitly out of scope; v1 is one provider, one-shot calls; adds needless dependency/abstraction | Direct `AsyncOpenAI` call from a small llm module |
 | Webhook mode / Flask/FastAPI front | Requires public URL, TLS, domain; contradicts locked polling decision | PTB `Application.run_polling()` |
 | `python:3.12-alpine` | musl libc breaks/recompiles many Python wheels; slow, fragile builds | `python:3.12-slim` |
 | Conversation/history storage (Redis, DB) | One-shot replies are locked scope; adds infra | Stateless handler; no persistence |
@@ -103,8 +96,8 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 
 ## Stack Patterns by Variant
 
-- Reconsider LiteLLM at that point; the Protocol-based adapter makes migration localized to the `llm/` package.
-- Add PTB's `[rate-limiter]` extra (aiolimiter) and/or a per-user throttle in the handler. Out of scope for v1 but the cleanest place to add it is the handler layer, not the adapter.
+- If a second provider is ever needed, introduce an adapter/LiteLLM at that point; keeping the OpenAI call in one small module makes that migration localized.
+- Add PTB's `[rate-limiter]` extra (aiolimiter) and/or a per-user throttle in the handler. Out of scope for v1 but the cleanest place to add it is the handler layer, not the OpenAI call site.
 - Switch to webhook mode — PTB supports it via the `[webhooks]` extra (tornado), but this then requires the domain/TLS the project deliberately avoided.
 
 ## Version Compatibility
@@ -113,15 +106,13 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 |-----------|-----------------|-------|
 | python-telegram-bot 22.7 | Python 3.10–3.14 | Async; needs 3.10+. 3.12 recommended. |
 | openai 2.41.1 | Python 3.9–3.14 | v2 SDK line; `AsyncOpenAI` for asyncio. |
-| anthropic 0.109.1 | Python 3.9–3.14 | `AsyncAnthropic` for asyncio. |
-| PTB + openai + anthropic | shared `httpx`/`anyio` | All three depend on `httpx`; do not pin `httpx` manually to avoid resolver conflicts. |
+| PTB + openai | shared `httpx`/`anyio` | Both depend on `httpx`; do not pin `httpx` manually to avoid resolver conflicts. |
 | docker/build-push-action | docker/login-action@v3 | v6 is current-stable and widely used; v7 + login-action@v4 also released in 2026. Either works; v6/v3 are the conservative, documented pairing. |
 
 ## Sources
 
 - https://pypi.org/pypi/python-telegram-bot/json — confirmed v22.7, Python 3.10+, available extras (HIGH)
 - https://pypi.org/pypi/openai/json — confirmed v2.41.1, Python 3.9–3.14 (HIGH)
-- https://pypi.org/pypi/anthropic/json — confirmed v0.109.1 (2026-06-09), Python 3.9+ (HIGH)
 - https://docs.python-telegram-bot.org/ — `Application.run_polling()` behavior, signal handling (HIGH)
 - https://pythonspeed.com/articles/base-image-python-docker-images/ — slim vs alpine vs distroless guidance, Feb 2026 (MEDIUM-HIGH, cross-checked)
 - https://oneuptime.com/blog/post/2026-02-08-how-to-choose-the-right-docker-base-image-for-your-application/view — base image selection (MEDIUM, cross-checked)
