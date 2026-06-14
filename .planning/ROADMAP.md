@@ -13,8 +13,8 @@ This roadmap delivers a public Telegram bot that turns any user's text message i
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Working AI Bot** - A real Telegram bot replies to messages via OpenAI, end-to-end
-- [ ] **Phase 2: Reliability Hardening** - Bot stays responsive and stable under real public traffic
+- [x] **Phase 1: Working AI Bot** - A real Telegram bot replies to messages via OpenAI, end-to-end
+- [x] **Phase 2: Reliability Hardening** - Bot stays responsive and stable under real public traffic
 - [ ] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a DigitalOcean droplet, always up
 - [ ] **Phase 4: CI/CD Auto-Deploy** - Pushing to `main` runs CI checks, then builds and deploys the bot automatically
 
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Working AI Bot | 0/2 | Not started | - |
-| 2. Reliability Hardening | 0/TBD | Not started | - |
+| 1. Working AI Bot | 2/2 | Complete | 2026-06-12 |
+| 2. Reliability Hardening | 1/1 | Complete | 2026-06-14 |
 | 3. Containerize & Run 24/7 | 0/TBD | Not started | - |
 | 4. CI/CD Auto-Deploy | 0/TBD | Not started | - |
