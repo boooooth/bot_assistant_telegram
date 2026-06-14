@@ -30,15 +30,15 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Deployment & Ops
 
-- [ ] **DEP-01**: The bot runs in a Docker container; the same image runs locally and on the droplet
-- [ ] **DEP-02**: The bot runs 24/7 on a DigitalOcean droplet and auto-restarts on crash or reboot
+- [ ] **DEP-01**: The bot runs in a Docker container; the same image runs locally and on the server
+- [ ] **DEP-02**: The bot runs 24/7 on a Linux VPS and auto-restarts on crash or reboot
 - [ ] **DEP-03**: Secrets (Telegram token, LLM API keys) are provided via environment only — never committed to git or baked into the image
-- [ ] **DEP-04**: Pushing to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet
+- [ ] **DEP-04**: Pushing to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the server
 
 ### Quality & CI
 
 - [ ] **QA-01**: An automated test suite (`pytest`) covers core message handling and the OpenAI call path
-- [ ] **QA-02**: A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests (`pytest`), and a Docker build check on every push and pull request; deployment to the droplet proceeds only when CI passes
+- [ ] **QA-02**: A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests (`pytest`), and a Docker build check on every push and pull request; deployment to the server proceeds only when CI passes
 
 ## v2 Requirements
 

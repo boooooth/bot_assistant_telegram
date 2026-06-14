@@ -57,8 +57,8 @@
 | Provider factory | Read `LLM_PROVIDER` env var, return the matching provider instance | Small `get_provider()` dict-dispatch function |
 | Config / Secrets | Load and validate `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, `LLM_PROVIDER`, `OPENAI_MODEL` from env; fail fast if missing | `os.environ` + a typed settings object (e.g. `pydantic-settings` or a plain dataclass) |
 | Logging | Structured, leveled logs to stdout (so Docker/journald capture them) | stdlib `logging` configured once at startup |
-| Container | Reproducible runtime, same image local and on droplet | `Dockerfile` + `docker-compose.yml` |
-| CI/CD | Build image, push to registry, SSH to droplet, pull + restart | GitHub Actions + GHCR + `appleboy/ssh-action` |
+| Container | Reproducible runtime, same image local and on server | `Dockerfile` + `docker-compose.yml` |
+| CI/CD | Build image, push to registry, SSH to server, pull + restart | GitHub Actions + GHCR + `appleboy/ssh-action` |
 
 ## Recommended Project Structure
 

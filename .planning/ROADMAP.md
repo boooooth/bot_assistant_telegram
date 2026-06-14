@@ -2,7 +2,7 @@
 
 ## Overview
 
-This roadmap delivers a public Telegram bot that turns any user's text message into a one-shot OpenAI (ChatGPT) reply, running reliably 24/7. As a Vertical MVP, the journey front-loads a working, demonstrable bot: Phase 1 gets a real bot replying in Telegram end-to-end (config, direct OpenAI call, polling, `/start` + `/help`). Phase 2 hardens that working bot so it survives real public traffic (graceful errors, concurrent handling, single-poller safety). Phase 3 packages it in Docker and stands it up 24/7 on a DigitalOcean droplet with auto-restart. Phase 4 wraps push-button CI/CD around the proven image so every push to `main` redeploys. Each phase leaves the bot demonstrably more capable than the last.
+This roadmap delivers a public Telegram bot that turns any user's text message into a one-shot OpenAI (ChatGPT) reply, running reliably 24/7. As a Vertical MVP, the journey front-loads a working, demonstrable bot: Phase 1 gets a real bot replying in Telegram end-to-end (config, direct OpenAI call, polling, `/start` + `/help`). Phase 2 hardens that working bot so it survives real public traffic (graceful errors, concurrent handling, single-poller safety). Phase 3 packages it in Docker and stands it up 24/7 on a Linux VPS with auto-restart. Phase 4 wraps push-button CI/CD around the proven image so every push to `main` redeploys. Each phase leaves the bot demonstrably more capable than the last.
 
 ## Phases
 
@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Working AI Bot** - A real Telegram bot replies to messages via OpenAI, end-to-end
 - [x] **Phase 2: Reliability Hardening** - Bot stays responsive and stable under real public traffic
-- [ ] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a DigitalOcean droplet, always up
+- [ ] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a Linux VPS, always up
 - [ ] **Phase 4: CI/CD Auto-Deploy** - Pushing to `main` runs CI checks, then builds and deploys the bot automatically
 
 ## Phase Details
@@ -58,21 +58,21 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Phase 3: Containerize & Run 24/7
 
-**Goal**: The bot runs as the same Docker image locally and on a DigitalOcean droplet, stays up 24/7, and auto-restarts on crash or reboot — with secrets injected at runtime, never committed or baked into the image.
+**Goal**: The bot runs as the same Docker image locally and on a Linux VPS, stays up 24/7, and auto-restarts on crash or reboot — with secrets injected at runtime, never committed or baked into the image.
 **Mode:** mvp
 **Depends on**: Phase 2
 **Requirements**: DEP-01, DEP-02, DEP-03
 **Success Criteria** (what must be TRUE):
 
-  1. The same Docker image runs the bot identically on a local machine and on the droplet
-  2. The bot runs continuously on the droplet and comes back automatically after a crash or droplet reboot
+  1. The same Docker image runs the bot identically on a local machine and on the server
+  2. The bot runs continuously on the server and comes back automatically after a crash or server reboot
   3. The Telegram token and OpenAI key are supplied via environment at runtime, and neither appears in git history nor inside the built image
 
 **Plans**: TBD
 
 ### Phase 4: CI/CD Auto-Deploy
 
-**Goal**: A push to `main` runs automated checks (lint, type-check, tests, build) and, when they pass, automatically builds the image and deploys the new version to the droplet — with no manual SSH or Docker steps.
+**Goal**: A push to `main` runs automated checks (lint, type-check, tests, build) and, when they pass, automatically builds the image and deploys the new version to the server — with no manual SSH or Docker steps.
 **Mode:** mvp
 **Depends on**: Phase 3
 **Requirements**: DEP-04, QA-01, QA-02
@@ -80,8 +80,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
   1. An automated test suite (`pytest`) covers core message handling and the OpenAI call path
   2. A CI workflow runs lint (`ruff`), type-check (`mypy`), tests, and a Docker build check on every push and pull request, and fails the run if any check fails
-  3. Pushing to `main` triggers the pipeline that builds the image and deploys it to the droplet only when CI passes
-  4. After a successful pipeline run, the droplet is running the newly built version of the bot
+  3. Pushing to `main` triggers the pipeline that builds the image and deploys it to the server only when CI passes
+  4. After a successful pipeline run, the server is running the newly built version of the bot
   5. The deploy stops the old container before starting the new one, so no 409 polling conflict occurs during release
 
 **Plans**: TBD

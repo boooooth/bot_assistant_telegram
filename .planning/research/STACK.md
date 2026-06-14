@@ -1,6 +1,6 @@
 # Stack Research
 
-**Domain:** Public polling Telegram bot that relays user messages to an LLM (one-shot, swappable provider, Dockerized, deployed to a DigitalOcean droplet via GitHub Actions)
+**Domain:** Public polling Telegram bot that relays user messages to an LLM (one-shot, swappable provider, Dockerized, deployed to a Linux VPS via GitHub Actions)
 **Researched:** 2026-06-11
 **Confidence:** HIGH
 
@@ -30,8 +30,8 @@
 | Tool | Purpose | Notes |
 |------|---------|-------|
 | ruff | Lint + format | Single fast tool replacing flake8 + black + isort. Add a minimal `ruff.toml`; run in CI before the build step. |
-| Docker + docker compose | Packaging & dev/prod parity | Same image runs locally and on the droplet. A one-service `compose.yaml` on the droplet makes the deploy step (`docker compose pull && up -d`) trivial and gives you `restart: unless-stopped` for 24/7 uptime. |
-| GitHub Actions | CI/CD | Build image, push to GHCR, SSH to droplet, pull + restart. See workflow sketch below. |
+| Docker + docker compose | Packaging & dev/prod parity | Same image runs locally and on the server. A one-service `compose.yaml` on the server makes the deploy step (`docker compose pull && up -d`) trivial and gives you `restart: unless-stopped` for 24/7 uptime. |
+| GitHub Actions | CI/CD | Build image, push to GHCR, SSH to server, pull + restart. See workflow sketch below. |
 
 ## Installation
 
@@ -119,9 +119,9 @@ CMD ["python", "-m", "bot"]
 - `PYTHONUNBUFFERED=1` so logs reach Docker/journald immediately.
 - Rely on PTB's built-in signal handling for graceful shutdown; pair with `restart: unless-stopped` in compose for 24/7 uptime.
 
-## GitHub Actions → DigitalOcean Droplet (push to `main`)
+## GitHub Actions → Linux VPS (push to `main`)
 
-Standard, well-trodden pattern: **build → push to GHCR → SSH to droplet → pull + restart**.
+Standard, well-trodden pattern: **build → push to GHCR → SSH to server → pull + restart**.
 
 ```yaml
 on:
@@ -144,18 +144,18 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest
       - uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /opt/telegram-bot
             docker compose pull
             docker compose up -d
 ```
 
-- **Registry: GHCR (`ghcr.io`)** — free for the repo, authenticated with the built-in `GITHUB_TOKEN`, no extra DigitalOcean Container Registry billing. The droplet pulls with a read-only PAT/`GITHUB_TOKEN`.
+- **Registry: GHCR (`ghcr.io`)** — free for the repo, authenticated with the built-in `GITHUB_TOKEN`, no extra cloud-specific container registry billing. The server pulls with a read-only PAT/`GITHUB_TOKEN`.
 - **SSH: `appleboy/ssh-action@v1`** — the standard action for "run these commands on my server." Use an **ED25519** deploy key (RSA is rejected on some modern sshd configs).
-- Secrets needed: `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`. Provider/API keys live in an `.env` file on the droplet referenced by `compose.yaml` (never baked into the image).
+- Secrets needed: `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`. Provider/API keys live in an `.env` file on the server referenced by `compose.yaml` (never baked into the image).
 
 ## Alternatives Considered
 
@@ -164,8 +164,8 @@ jobs:
 | python-telegram-bot 22.7 | aiogram 3.x | aiogram is excellent and slightly more modern in API; choose it if you prefer its router/filter style. PTB wins here on the user's prior familiarity and `run_polling()` simplicity. Either is a defensible standard. |
 | python-telegram-bot 22.7 | pyTelegramBotAPI (telebot) | Simpler but largely sync; weaker fit for async LLM calls. Use only for trivial sync scripts. |
 | Hand-rolled adapter | LiteLLM | LiteLLM is the right call when you need 5+ providers, unified streaming, fallbacks, and budget tracking. For two providers and one-shot calls it adds a heavy dependency and abstraction the project explicitly rejected. Revisit only if provider count or routing complexity grows. |
-| GHCR | DigitalOcean Container Registry | Use DOCR if you want registry and droplet in one vendor/VPC or hit GHCR rate/visibility limits. GHCR is cheaper and simpler for a single private repo. |
-| `appleboy/ssh-action` + compose | DigitalOcean App Platform | App Platform removes server management but costs more and was explicitly declined in favor of a cheap droplet with full control. |
+| GHCR | Cloud-specific container registry | Use a provider registry if you want registry and server in one vendor/VPC or hit GHCR rate/visibility limits. GHCR is cheaper and simpler for a single private repo. |
+| `appleboy/ssh-action` + compose | Managed platform (PaaS) | A managed platform removes server management but costs more and was explicitly declined in favor of a Linux VPS with full control. |
 | `python:3.12-slim` | `python:3.12-alpine` | Alpine only if image size is critical AND you have no glibc-only wheels. For Python it routinely breaks/recompiles wheels (musl libc) — not worth it here. |
 
 ## What NOT to Use

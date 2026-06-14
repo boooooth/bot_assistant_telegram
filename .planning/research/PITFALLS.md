@@ -1,10 +1,10 @@
 # Pitfalls Research
 
-**Domain:** Public Telegram bot fronting an LLM (general-purpose AI assistant, polling-based, OpenAI default, Dockerized on a DO droplet, deployed via GitHub Actions)
+**Domain:** Public Telegram bot fronting an LLM (general-purpose AI assistant, polling-based, OpenAI default, Dockerized on a Linux VPS, deployed via GitHub Actions)
 **Researched:** 2026-06-11
 **Confidence:** HIGH
 
-These pitfalls are specific to a Telegram-bot-to-LLM bridge. Generic web/security advice is omitted. Every critical pitfall is something that has bitten this exact class of project. Locked decisions (public, no guardrails v1, one-shot, polling, OpenAI default, Docker, DO droplet, GitHub Actions) are respected — the risks each creates are flagged rather than argued against.
+These pitfalls are specific to a Telegram-bot-to-LLM bridge. Generic web/security advice is omitted. Every critical pitfall is something that has bitten this exact class of project. Locked decisions (public, no guardrails v1, one-shot, polling, OpenAI default, Docker, Linux VPS, GitHub Actions) are respected — the risks each creates are flagged rather than argued against.
 
 ## Critical Pitfalls
 
