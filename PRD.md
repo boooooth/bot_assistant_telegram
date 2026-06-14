@@ -5,7 +5,7 @@
 
 ## 1. Overview
 
-A public Telegram bot that acts as a general-purpose AI assistant. A user sends a text message; the bot forwards it to the OpenAI (ChatGPT) API and sends the reply straight back into the chat. The bot is stateless (each message answered independently, no memory), runs 24/7 in Docker on a DigitalOcean droplet, and redeploys automatically via GitHub Actions on every push to `main`.
+A public Telegram bot that acts as a general-purpose AI assistant. A user sends a text message; the bot forwards it to the OpenAI (ChatGPT) API and sends the reply straight back into the chat. The bot is stateless (each message answered independently, no memory), runs 24/7 in Docker on a Linux VPS, and redeploys automatically via GitHub Actions on every push to `main`.
 
 **Core value:** *Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.*
 
@@ -27,8 +27,8 @@ People increasingly want quick AI answers, but switching to a separate app or we
 | Survive errors gracefully | LLM/network failure yields a friendly message, not a crash or silence |
 | Handle concurrent users | A slow reply for one user does not block other users |
 | Single-poller safety | Exactly one poller per token; no 409 conflicts in logs |
-| Run 24/7 | Bot runs continuously on a DO droplet and auto-restarts on crash/reboot |
-| Reproducible deploys | Same Docker image runs locally and on the droplet; push to `main` auto-deploys |
+| Run 24/7 | Bot runs continuously on a Linux VPS and auto-restarts on crash/reboot |
+| Reproducible deploys | Same Docker image runs locally and on the server; push to `main` auto-deploys |
 | Secret hygiene | No secrets in git history or the built image |
 | Cost-aware default | Default model `gpt-4o-mini` keeps per-message cost low |
 
@@ -41,8 +41,8 @@ People increasingly want quick AI answers, but switching to a separate app or we
 - **Core messaging**: receive text via long polling → one-shot OpenAI call → reply in chat
 - **Commands**: `/start` (welcome), `/help` (usage)
 - **Reliability baseline**: graceful error replies, async/concurrent handling, single-poller safety
-- **Deployment**: Dockerized, 24/7 on a DigitalOcean droplet with auto-restart, secrets via env
-- **CI/CD**: CI checks (lint, type-check, tests, build) on every push/PR; push to `main` → GitHub Actions builds the image and deploys to the droplet when CI passes
+- **Deployment**: Dockerized, 24/7 on a Linux VPS with auto-restart, secrets via env
+- **CI/CD**: CI checks (lint, type-check, tests, build) on every push/PR; push to `main` → GitHub Actions builds the image and deploys to the server when CI passes
 - **Quality**: automated test suite + lint/type-check gating deployment
 
 ### 4.2 Out of Scope
@@ -94,9 +94,9 @@ Deployment / delivery
         │
         ▼  GitHub Actions: build image → push to GHCR
         │
-        ▼  SSH to droplet → docker compose pull && up -d
+        ▼  SSH to server → docker compose pull && up -d
 ┌──────────────────────────────┐
-│  DigitalOcean Droplet        │
+│  Linux VPS (any provider)    │
 │  Docker container            │  restart: unless-stopped (24/7)
 │  secrets via .env (runtime)  │  stop old container before new (no 409)
 └──────────────────────────────┘
@@ -143,10 +143,10 @@ Requirement IDs trace to `.planning/REQUIREMENTS.md` and the roadmap (§10).
 
 | ID | Requirement |
 |----|-------------|
-| DEP-01 | Run in a Docker container; the same image runs locally and on the droplet |
-| DEP-02 | Run 24/7 on a DigitalOcean droplet and auto-restart on crash or reboot |
+| DEP-01 | Run in a Docker container; the same image runs locally and on the server |
+| DEP-02 | Run 24/7 on a Linux VPS and auto-restart on crash or reboot |
 | DEP-03 | Provide secrets via environment only — never committed to git or baked into the image |
-| DEP-04 | Push to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the droplet |
+| DEP-04 | Push to `main` triggers a GitHub Actions pipeline that builds the image and deploys it to the server |
 
 ### F6 — Quality & CI
 
@@ -159,7 +159,7 @@ Requirement IDs trace to `.planning/REQUIREMENTS.md` and the roadmap (§10).
 
 ## 7. Configuration Reference
 
-All configuration is via environment variables (e.g. a `.env` file locally and on the droplet).
+All configuration is via environment variables (e.g. a `.env` file locally and on the server).
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -180,7 +180,7 @@ The bot **fails fast at boot** if a required variable is missing.
 | Reliability | Bot auto-restarts on crash/reboot (Docker `restart: unless-stopped`) |
 | Concurrency | Async handling; one slow LLM call does not block other users |
 | Security | Secrets via environment only; never in git history or the image |
-| Portability | Same Docker image runs locally and on the droplet (Python 3.12 / Linux) |
+| Portability | Same Docker image runs locally and on the server (Python 3.12 / Linux) |
 | Cost control | Low-cost default model (`gpt-4o-mini`); see §9 for the accepted unbounded-cost risk |
 | Dependencies | `python-telegram-bot`, `openai` |
 
@@ -211,14 +211,14 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 **Success criteria:** friendly error on OpenAI failure; a slow reply doesn't delay other users; only one poller per token (no 409 in logs).
 
 ### Phase 3 — Containerize & Run 24/7
-**Goal:** Same image local + droplet, always up, secrets at runtime.
+**Goal:** Same image local + server, always up, secrets at runtime.
 **Requirements:** DEP-01, DEP-02, DEP-03
-**Success criteria:** identical image local and on droplet; runs continuously and auto-restarts; secrets via env, absent from git and image.
+**Success criteria:** identical image local and on server; runs continuously and auto-restarts; secrets via env, absent from git and image.
 
 ### Phase 4 — CI/CD Auto-Deploy
 **Goal:** Push to `main` runs CI checks, then builds and deploys automatically when they pass.
 **Requirements:** DEP-04, QA-01, QA-02
-**Success criteria:** `pytest` suite covers core handling and the OpenAI path; CI runs lint/type-check/tests/build on every push & PR and fails on any error; push to `main` builds + deploys only when CI is green; droplet runs the new version; old container stops before new starts (no 409 during release).
+**Success criteria:** `pytest` suite covers core handling and the OpenAI path; CI runs lint/type-check/tests/build on every push & PR and fails on any error; push to `main` builds + deploys only when CI is green; server runs the new version; old container stops before new starts (no 409 during release).
 
 ---
 
@@ -232,8 +232,8 @@ Structured as a **Vertical MVP**: deliver a working bot first, then harden, then
 | One-shot replies, no memory | Simplicity for v1 |
 | Public access, no guardrails | Lean v1 (accepted cost risk; see §9) |
 | Polling over webhook | No domain/TLS needed; matches prior self-hosting experience |
-| DigitalOcean droplet + Docker | Cheap, portable, full control |
-| CI/CD via GitHub Actions | Push-button deploys to the droplet on push to `main` |
+| Linux VPS + Docker | Portable, full control; any provider works |
+| CI/CD via GitHub Actions | Push-button deploys to the server on push to `main` |
 | Vertical MVP phase structure | Working bot first, then harden and deploy |
 
 ---
@@ -253,7 +253,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-> Use a **separate BotFather token** for local testing so the laptop instance and the droplet never share a token (avoids a 409 polling conflict — see REL-03).
+> Use a **separate BotFather token** for local testing so the laptop instance and the server never share a token (avoids a 409 polling conflict — see REL-03).
 
 ### 12.2 Production deployment (automated CI/CD)
 
@@ -261,12 +261,12 @@ Production deploys are **automatic** — no manual SSH or build steps. On every 
 
 1. Builds the Docker image
 2. Pushes it to GHCR (GitHub Container Registry)
-3. SSHes into the DigitalOcean droplet
+3. SSHes into the Linux VPS
 4. Runs `docker compose pull && up -d`, **stopping the old container before starting the new one** (avoids a 409 conflict during release)
 
-The droplet runs the container with `restart: unless-stopped` for 24/7 uptime. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live in the droplet's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
+The server runs the container with `restart: unless-stopped` for 24/7 uptime. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live in the server's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
 
-> One-time droplet setup (install Docker, clone repo / place `docker-compose.yml`, create `.env`) is manual; **every deploy after that is automatic** via the pipeline above.
+> One-time server setup (install Docker, clone repo / place `docker-compose.yml`, create `.env`) is manual; **every deploy after that is automatic** via the pipeline above.
 
 ---
 
@@ -277,7 +277,7 @@ CI and CD are split into **two GitHub Actions workflow files** under `.github/wo
 | File | Pipeline | Runs on | Purpose |
 |------|----------|---------|---------|
 | `ci.yml` | **CI** — Continuous Integration | every push + pull request | Quality gate: lint, type-check, run tests, verify the image builds |
-| `deploy.yml` | **CD** — Continuous Deployment | push to `main` | Build the image, push to GHCR, deploy to the droplet |
+| `deploy.yml` | **CD** — Continuous Deployment | push to `main` | Build the image, push to GHCR, deploy to the server |
 
 The split reflects their jobs: **CI proves the code is good; CD ships it.** CD runs only on `main` and is gated so it deploys only when CI is green.
 
@@ -327,8 +327,8 @@ jobs:
 4. **Tag** the image (`:latest` + commit SHA).
 5. **Push** the image to GHCR.
 
-**Job 2 — Deploy to droplet** *(runs after Job 1 succeeds)*
-6. **SSH into the droplet** (`appleboy/ssh-action`) using stored SSH secrets.
+**Job 2 — Deploy to server** *(runs after Job 1 succeeds)*
+6. **SSH into the server** (`appleboy/ssh-action`) using stored SSH secrets.
 7. **Pull the new image**: `docker compose pull`.
 8. **Restart cleanly**: `docker compose up -d` — Compose **stops the old container before starting the new one**, so only one poller runs at a time (avoids the 409 conflict, REL-03).
 9. **(Optional) prune** old images: `docker image prune -f`.
@@ -362,9 +362,9 @@ jobs:
     steps:
       - uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ~/telegram-ai-bot
             docker compose pull
@@ -377,11 +377,11 @@ jobs:
 | Secret (GitHub repo) | Used by | Purpose |
 |----------------------|---------|---------|
 | `GITHUB_TOKEN` (built-in) | `deploy.yml` | Push image to GHCR |
-| `DROPLET_HOST` | `deploy.yml` | Droplet IP / hostname |
-| `DROPLET_USER` | `deploy.yml` | SSH user |
-| `DROPLET_SSH_KEY` | `deploy.yml` | Private SSH deploy key (ED25519) |
+| `SERVER_HOST` | `deploy.yml` | Server IP / hostname |
+| `SERVER_USER` | `deploy.yml` | SSH user |
+| `SERVER_SSH_KEY` | `deploy.yml` | Private SSH deploy key (ED25519) |
 
-`ci.yml` needs **no secrets** — it only checks code. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live only in the droplet's `.env`; **neither pipeline ever sees them**.
+`ci.yml` needs **no secrets** — it only checks code. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live only in the server's `.env`; **neither pipeline ever sees them**.
 
 ### 13.4 How CI gates CD
 
@@ -396,7 +396,7 @@ CD should run only when CI is green. Two common ways:
 ## 14. Open Questions / Pre-Build Checklist
 
 - **OpenAI billing cap value** — operational decision; set in the OpenAI dashboard before going live (Phase 3/4).
-- **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the small droplet should be validated empirically during Phase 1/2.
+- **Concurrency tuning** — `concurrent_updates` and connection-pool sizing for the server should be validated empirically during Phase 1/2.
 - **CI tooling choices.** CI (QA-01, QA-02, now in v1 scope under Phase 4) commits the project to a `pytest` test suite and `ruff`/`mypy` tooling. The exact lint/type-check strictness and the minimum test coverage to enforce are finalized during Phase 4.
 - **Sign-off** — approval of this PRD is the gate before implementation starts.
 

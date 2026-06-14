@@ -1,7 +1,7 @@
 # Project Research Summary
 
 **Project:** Telegram AI Bot
-**Domain:** Public Telegram bot fronting a one-shot LLM (general-purpose AI assistant, polling, Dockerized on DigitalOcean)
+**Domain:** Public Telegram bot fronting a one-shot LLM (general-purpose AI assistant, polling, Dockerized on a Linux VPS)
 **Researched:** 2026-06-11
 **Confidence:** HIGH
 
@@ -107,12 +107,12 @@ Based on combined research, the architecture's own suggested build order (config
 ### Phase 5: CI/CD — GitHub Actions Deploy Pipeline
 
 **Rationale:** CI/CD is pure plumbing around an already-working, already-containerized bot. Build it last so there is something proven worth deploying. This phase also resolves the stop-old-before-new ordering (409 prevention).
-**Delivers:** `.github/workflows/deploy.yml` — build + push to GHCR on push to `main`, SSH to droplet via `appleboy/ssh-action`, `docker compose pull && up -d`. GitHub encrypted secrets for SSH credentials. Droplet's `.env` holds app secrets (never in workflow).
+**Delivers:** `.github/workflows/deploy.yml` — build + push to GHCR on push to `main`, SSH to server via `appleboy/ssh-action`, `docker compose pull && up -d`. GitHub encrypted secrets for SSH credentials. Server's `.env` holds app secrets (never in workflow).
 **Avoids:** 409 Conflict from deploy overlap; secrets in CI logs.
 
 ### Phase Ordering Rationale
 
-- Config first because every component consumes validated settings; fail-fast early prevents "works locally, dies on droplet" mystery failures.
+- Config first because every component consumes validated settings; fail-fast early prevents "works locally, dies on server" mystery failures.
 - Adapter before the bot loop because it is the riskiest custom design (provider swap) and tests in complete isolation with no Telegram dependency.
 - Polling after the adapter so the first time the real bot runs, the LLM path is already proven; only Telegram wiring is new.
 - Containerize after the bot works on the host so container failures are unambiguously packaging issues.
@@ -125,7 +125,7 @@ Phases with standard patterns (skip research-phase):
 - **Phase 2 (LLM Adapter):** Official SDK docs are comprehensive; Protocol + factory pattern is standard Python; error handling sourced from OpenAI's own cookbook.
 - **Phase 3 (Telegram Bot):** PTB official docs are thorough; typing keepalive and reply chunking are well-documented in community issues and official API references.
 - **Phase 4 (Docker):** Standard single-stage Python slim image; no unusual base image or build steps.
-- **Phase 5 (CI/CD):** GHCR + `appleboy/ssh-action` + `docker compose pull && up -d` is the canonical droplet deploy pattern with multiple verified examples.
+- **Phase 5 (CI/CD):** GHCR + `appleboy/ssh-action` + `docker compose pull && up -d` is the canonical server deploy pattern with multiple verified examples.
 
 No phase needs a `--research-phase` flag. All patterns are well-documented with high-confidence sources.
 

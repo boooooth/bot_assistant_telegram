@@ -11,9 +11,9 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 ### Constraints
 
 - **Architecture**: Bot calls the OpenAI (ChatGPT) API directly — no provider abstraction layer for v1. Model name configurable via env var.
-- **Packaging**: Docker-containerized so the same image runs locally and on the droplet.
-- **Hosting**: DigitalOcean droplet using polling — no public URL, HTTPS, or domain required.
-- **Delivery**: CI/CD via GitHub Actions deploying to the droplet on push to `main`.
+- **Packaging**: Docker-containerized so the same image runs locally and on the server.
+- **Hosting**: Linux VPS using polling — no public URL, HTTPS, or domain required.
+- **Delivery**: CI/CD via GitHub Actions deploying to the server on push to `main`.
 - **Dependencies**: Telegram Bot API token; OpenAI API key.
 - **Cost**: Public access + no usage caps = unbounded LLM spend risk; accepted for v1.
 
@@ -46,8 +46,8 @@ A public Telegram bot that acts as a general-purpose AI assistant. A user sends 
 | Tool | Purpose | Notes |
 |------|---------|-------|
 | ruff | Lint + format | Single fast tool replacing flake8 + black + isort. Add a minimal `ruff.toml`; run in CI before the build step. |
-| Docker + docker compose | Packaging & dev/prod parity | Same image runs locally and on the droplet. A one-service `compose.yaml` on the droplet makes the deploy step (`docker compose pull && up -d`) trivial and gives you `restart: unless-stopped` for 24/7 uptime. |
-| GitHub Actions | CI/CD | Build image, push to GHCR, SSH to droplet, pull + restart. See workflow sketch below. |
+| Docker + docker compose | Packaging & dev/prod parity | Same image runs locally and on the server. A one-service `compose.yaml` on the server makes the deploy step (`docker compose pull && up -d`) trivial and gives you `restart: unless-stopped` for 24/7 uptime. |
+| GitHub Actions | CI/CD | Build image, push to GHCR, SSH to server, pull + restart. See workflow sketch below. |
 
 ## Installation
 
@@ -65,11 +65,11 @@ v1 calls the OpenAI SDK directly from a small, self-contained module (e.g. an `l
 - `PYTHONUNBUFFERED=1` so logs reach Docker/journald immediately.
 - Rely on PTB's built-in signal handling for graceful shutdown; pair with `restart: unless-stopped` in compose for 24/7 uptime.
 
-## GitHub Actions → DigitalOcean Droplet (push to `main`)
+## GitHub Actions → Linux VPS (push to `main`)
 
-- **Registry: GHCR (`ghcr.io`)** — free for the repo, authenticated with the built-in `GITHUB_TOKEN`, no extra DigitalOcean Container Registry billing. The droplet pulls with a read-only PAT/`GITHUB_TOKEN`.
+- **Registry: GHCR (`ghcr.io`)** — free for the repo, authenticated with the built-in `GITHUB_TOKEN`, no extra cloud-specific container registry billing. The server pulls with a read-only PAT/`GITHUB_TOKEN`.
 - **SSH: `appleboy/ssh-action@v1`** — the standard action for "run these commands on my server." Use an **ED25519** deploy key (RSA is rejected on some modern sshd configs).
-- Secrets needed: `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`. Provider/API keys live in an `.env` file on the droplet referenced by `compose.yaml` (never baked into the image).
+- Secrets needed: `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`. Provider/API keys live in an `.env` file on the server referenced by `compose.yaml` (never baked into the image).
 
 ## Alternatives Considered
 
@@ -78,8 +78,8 @@ v1 calls the OpenAI SDK directly from a small, self-contained module (e.g. an `l
 | python-telegram-bot 22.7 | aiogram 3.x | aiogram is excellent and slightly more modern in API; choose it if you prefer its router/filter style. PTB wins here on the user's prior familiarity and `run_polling()` simplicity. Either is a defensible standard. |
 | python-telegram-bot 22.7 | pyTelegramBotAPI (telebot) | Simpler but largely sync; weaker fit for async LLM calls. Use only for trivial sync scripts. |
 | Direct OpenAI call | LiteLLM / provider adapter | LiteLLM or a hand-rolled adapter is the right call when you need multiple providers, unified streaming, fallbacks, or budget tracking. v1 deliberately calls OpenAI directly (one provider, one-shot calls) — no abstraction. Revisit only if a second provider or routing is actually needed. |
-| GHCR | DigitalOcean Container Registry | Use DOCR if you want registry and droplet in one vendor/VPC or hit GHCR rate/visibility limits. GHCR is cheaper and simpler for a single private repo. |
-| `appleboy/ssh-action` + compose | DigitalOcean App Platform | App Platform removes server management but costs more and was explicitly declined in favor of a cheap droplet with full control. |
+| GHCR | Cloud-specific container registry | Use a provider registry if you want registry and server in one vendor/VPC or hit GHCR rate/visibility limits. GHCR is cheaper and simpler for a single private repo. |
+| `appleboy/ssh-action` + compose | Managed platform (PaaS) | A managed platform removes server management but costs more and was explicitly declined in favor of a Linux VPS with full control. |
 | `python:3.12-slim` | `python:3.12-alpine` | Alpine only if image size is critical AND you have no glibc-only wheels. For Python it routinely breaks/recompiles wheels (musl libc) — not worth it here. |
 
 ## What NOT to Use
@@ -91,7 +91,7 @@ v1 calls the OpenAI SDK directly from a small, self-contained module (e.g. an `l
 | `python:3.12-alpine` | musl libc breaks/recompiles many Python wheels; slow, fragile builds | `python:3.12-slim` |
 | Conversation/history storage (Redis, DB) | One-shot replies are locked scope; adds infra | Stateless handler; no persistence |
 | Pinning `httpx` yourself | All three SDKs bring a compatible `httpx`; manual pins cause resolver conflicts | Let SDKs manage it transitively |
-| Baking API keys into the Docker image | Leaks secrets into image layers/registry | `.env` on droplet via compose `env_file`; GH Actions secrets for SSH only |
+| Baking API keys into the Docker image | Leaks secrets into image layers/registry | `.env` on server via compose `env_file`; GH Actions secrets for SSH only |
 | `latest` floating Python tag in Dockerfile | Non-reproducible builds | Pin `python:3.12-slim` |
 
 ## Stack Patterns by Variant

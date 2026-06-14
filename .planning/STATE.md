@@ -63,7 +63,7 @@ Recent decisions affecting current work:
 - Call OpenAI (ChatGPT) API directly — no provider abstraction layer for v1 (reverses earlier adapter plan)
 - One-shot replies, no conversation memory
 - Polling over webhook; public access with no guardrails (accepted cost risk)
-- DigitalOcean droplet + Docker; CI/CD via GitHub Actions on push to `main`
+- Linux VPS + Docker; CI/CD via GitHub Actions on push to `main`
 
 ### Pending Todos
 
