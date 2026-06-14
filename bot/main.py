@@ -20,7 +20,7 @@ def main() -> None:
 
     app = ApplicationBuilder().token(settings.telegram_bot_token).build()
     app.bot_data["complete"] = lambda text: openai_client.complete(
-        settings.openai_model, settings.openai_api_key, text
+        settings.llm_model, settings.llm_api_key, text
     )
     app.bot_data["allowed_chat_ids"] = settings.allowed_chat_ids
 
