@@ -164,9 +164,9 @@ All configuration is via environment variables (e.g. a `.env` file locally and o
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `TELEGRAM_BOT_TOKEN` | Yes | — | Bot token from @BotFather |
-| `OPENAI_API_KEY` | Yes | — | OpenAI API key |
-| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name |
-| `OPENAI_REQUEST_TIMEOUT` | No | `60` | Seconds before an LLM call times out |
+| `LLM_API_KEY` | Yes | — | LLM API key (OpenAI by default) |
+| `LLM_MODEL` | No | `gpt-4o-mini` | LLM model name (any LiteLLM-supported model) |
+| `LLM_REQUEST_TIMEOUT` | No | `60` | Seconds before an LLM call times out |
 | `LOG_LEVEL` | No | `INFO` | Logging verbosity |
 
 The bot **fails fast at boot** if a required variable is missing.
@@ -182,7 +182,7 @@ The bot **fails fast at boot** if a required variable is missing.
 | Security | Secrets via environment only; never in git history or the image |
 | Portability | Same Docker image runs locally and on the server (Python 3.12 / Linux) |
 | Cost control | Low-cost default model (`gpt-4o-mini`); see §9 for the accepted unbounded-cost risk |
-| Dependencies | `python-telegram-bot`, `openai` |
+| Dependencies | `python-telegram-bot`, `litellm` |
 
 ---
 
@@ -247,7 +247,7 @@ Run the bot on your own machine to develop and test. This is **not** how it reac
 ```bash
 # Configure environment
 cp .env.example .env
-# set TELEGRAM_BOT_TOKEN and OPENAI_API_KEY (OPENAI_MODEL optional)
+# set TELEGRAM_BOT_TOKEN and LLM_API_KEY (LLM_MODEL optional)
 
 # Build and run locally with Docker
 docker compose up --build
@@ -264,7 +264,7 @@ Production deploys are **automatic** — no manual SSH or build steps. On every 
 3. SSHes into the Linux VPS
 4. Runs `docker compose pull && up -d`, **stopping the old container before starting the new one** (avoids a 409 conflict during release)
 
-The server runs the container with `restart: unless-stopped` for 24/7 uptime. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live in the server's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
+The server runs the container with `restart: unless-stopped` for 24/7 uptime. App secrets (`TELEGRAM_BOT_TOKEN`, `LLM_API_KEY`) live in the server's `.env`; only SSH/registry credentials live in GitHub encrypted secrets.
 
 > One-time server setup (install Docker, clone repo / place `docker-compose.yml`, create `.env`) is manual; **every deploy after that is automatic** via the pipeline above.
 
@@ -381,7 +381,7 @@ jobs:
 | `SERVER_USER` | `deploy.yml` | SSH user |
 | `SERVER_SSH_KEY` | `deploy.yml` | Private SSH deploy key (ED25519) |
 
-`ci.yml` needs **no secrets** — it only checks code. App secrets (`TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`) live only in the server's `.env`; **neither pipeline ever sees them**.
+`ci.yml` needs **no secrets** — it only checks code. App secrets (`TELEGRAM_BOT_TOKEN`, `LLM_API_KEY`) live only in the server's `.env`; **neither pipeline ever sees them**.
 
 ### 13.4 How CI gates CD
 

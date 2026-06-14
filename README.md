@@ -8,8 +8,8 @@ A public Telegram bot that sends your messages to OpenAI (ChatGPT) and replies i
 
 ```
 TELEGRAM_BOT_TOKEN=   # from BotFather → /newbot
-OPENAI_API_KEY=       # from platform.openai.com → API keys
-OPENAI_MODEL=         # optional, defaults to gpt-4o-mini
+LLM_API_KEY=          # from platform.openai.com → API keys (OpenAI by default)
+LLM_MODEL=            # optional, defaults to gpt-4o-mini
 ALLOWED_CHAT_IDS=     # optional, comma-separated chat IDs to whitelist (empty = allow all)
 ```
 

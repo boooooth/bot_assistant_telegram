@@ -7,7 +7,7 @@ pytest's monkeypatch so changes are auto-reverted after each test).
 
 import pytest
 
-CONFIG_ENV_VARS = ("TELEGRAM_BOT_TOKEN", "OPENAI_API_KEY", "OPENAI_MODEL")
+CONFIG_ENV_VARS = ("TELEGRAM_BOT_TOKEN", "LLM_API_KEY", "LLM_MODEL")
 
 
 @pytest.fixture

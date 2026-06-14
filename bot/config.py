@@ -9,8 +9,8 @@ success criterion and the primary Security V14 control — instead of mid-reques
 import os
 from dataclasses import dataclass
 
-REQUIRED_VARS = ("TELEGRAM_BOT_TOKEN", "OPENAI_API_KEY")
-DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+REQUIRED_VARS = ("TELEGRAM_BOT_TOKEN", "LLM_API_KEY")
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
 
 
 class ConfigError(RuntimeError):
@@ -24,8 +24,8 @@ class ConfigError(RuntimeError):
 @dataclass(frozen=True)
 class Settings:
     telegram_bot_token: str
-    openai_api_key: str
-    openai_model: str
+    llm_api_key: str
+    llm_model: str
     allowed_chat_ids: frozenset[int]
 
 
@@ -33,7 +33,7 @@ def load_settings() -> Settings:
     """Read and validate config from the environment once, at startup.
 
     Treats unset and blank/whitespace-only required variables as missing.
-    ``OPENAI_MODEL`` is optional and defaults to ``gpt-4o-mini`` (LLM-01).
+    ``LLM_MODEL`` is optional and defaults to ``gpt-4o-mini`` (LLM-01).
     ``ALLOWED_CHAT_IDS`` is optional; when unset, all users are allowed.
     """
     missing = [
@@ -53,7 +53,7 @@ def load_settings() -> Settings:
 
     return Settings(
         telegram_bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
-        openai_api_key=os.environ["OPENAI_API_KEY"],
-        openai_model=os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+        llm_api_key=os.environ["LLM_API_KEY"],
+        llm_model=os.environ.get("LLM_MODEL", DEFAULT_LLM_MODEL),
         allowed_chat_ids=allowed_chat_ids,
     )
