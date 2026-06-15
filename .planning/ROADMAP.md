@@ -96,7 +96,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — QA-01 handler tests (tests/test_handlers.py) + pin ruff/mypy in requirements-dev.txt (QA-01, QA-02)
+- [x] 04-01-PLAN.md — QA-01 handler tests (tests/test_handlers.py) + pin ruff/mypy in requirements-dev.txt (QA-01, QA-02)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -116,4 +116,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Working AI Bot | 2/2 | Complete | 2026-06-12 |
 | 2. Reliability Hardening | 1/1 | Complete | 2026-06-14 |
 | 3. Containerize & Run 24/7 | 2/2 | Complete | 2026-06-15 |
-| 4. CI/CD Auto-Deploy | 0/3 | Not started | - |
+| 4. CI/CD Auto-Deploy | 1/3 | In Progress|  |

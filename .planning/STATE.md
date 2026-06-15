@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: null
-last_updated: "2026-06-15"
-last_activity: 2026-06-15 -- Phase 03 complete (VPS deploy runbook; GHCR push + auto-restart verified)
+status: Ready to execute
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-06-15T07:52:35.072Z"
+last_activity: 2026-06-15 -- Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 8
+  completed_plans: 6
   percent: 75
 ---
 
@@ -21,15 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
-**Current focus:** Phase 04 — cicd-auto-deploy
+**Current focus:** Phase 04 — ci-cd-auto-deploy
 
 ## Current Position
 
-Phase: 01 (working-ai-bot) — COMPLETE
+Phase: 04 (ci-cd-auto-deploy) — EXECUTING
+Plan: 2 of 3
 Phase: 02 (reliability-hardening) — COMPLETE (timeout added)
 Phase: 03 (containerize-run-24-7) — COMPLETE (2/2 plans; deploy runbook + GHCR/auto-restart verified)
 Current: Phase 04 (cicd-auto-deploy) — NOT STARTED
-Last activity: 2026-06-15 -- Phase 03 complete; VPS deploy runbook proven end-to-end (DEP-01/DEP-02)
+Last activity: 2026-06-15 -- Phase 04 execution started
 
 Progress: [███████░░░] 75%
 
@@ -53,6 +54,7 @@ Progress: [███████░░░] 75%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 04 P01 | 6 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -65,6 +67,7 @@ Recent decisions affecting current work:
 - One-shot replies, no conversation memory
 - Polling over webhook; public access with no guardrails (accepted cost risk)
 - Linux VPS + Docker; CI/CD via GitHub Actions on push to `main`
+- [Phase ?]: Matched existing asyncio.run() test idiom; skipped pytest-asyncio (zero new config) for handler tests
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-15
-Stopped at: Completed 03-02-PLAN.md (Phase 03 complete)
+Last session: 2026-06-15T07:52:34.763Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

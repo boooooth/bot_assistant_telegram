@@ -37,8 +37,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quality & CI
 
-- [ ] **QA-01**: An automated test suite (`pytest`) covers core message handling and the OpenAI call path
-- [ ] **QA-02**: A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests (`pytest`), and a Docker build check on every push and pull request; deployment to the server proceeds only when CI passes
+- [x] **QA-01**: An automated test suite (`pytest`) covers core message handling and the OpenAI call path
+- [x] **QA-02**: A GitHub Actions CI workflow runs lint (`ruff`), type-check (`mypy`), tests (`pytest`), and a Docker build check on every push and pull request; deployment to the server proceeds only when CI passes
 
 ## v2 Requirements
 
@@ -100,10 +100,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEP-02 | Phase 3 | Pending |
 | DEP-03 | Phase 3 | Pending |
 | DEP-04 | Phase 4 | Pending |
-| QA-01 | Phase 4 | Pending |
-| QA-02 | Phase 4 | Pending |
+| QA-01 | Phase 4 | Complete |
+| QA-02 | Phase 4 | Complete |
 
 **Coverage:**
+
 - v1 requirements: 15 total
 - Mapped to phases: 15 ✓
 - Unmapped: 0 ✓
