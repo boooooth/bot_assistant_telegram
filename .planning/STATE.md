@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-06-15T07:52:35.072Z"
-last_activity: 2026-06-15 -- Phase 04 execution started
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-06-15T08:05:00.000Z"
+last_activity: 2026-06-15 -- Completed 04-02 (deploy gated on CI via workflow_run)
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-06-11)
 ## Current Position
 
 Phase: 04 (ci-cd-auto-deploy) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Phase: 02 (reliability-hardening) — COMPLETE (timeout added)
 Phase: 03 (containerize-run-24-7) — COMPLETE (2/2 plans; deploy runbook + GHCR/auto-restart verified)
-Current: Phase 04 (cicd-auto-deploy) — NOT STARTED
-Last activity: 2026-06-15 -- Phase 04 execution started
+Current: Phase 04 (cicd-auto-deploy) — Wave 2 complete (deploy gated on CI); Wave 3 (live checkpoint) next
+Last activity: 2026-06-15 -- Completed 04-02 (deploy gated on CI via workflow_run)
 
-Progress: [███████░░░] 75%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [███████░░░] 75%
 
 *Updated after each plan completion*
 | Phase 04 P01 | 6 min | 2 tasks | 2 files |
+| Phase 04 P02 | 5 min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - Polling over webhook; public access with no guardrails (accepted cost risk)
 - Linux VPS + Docker; CI/CD via GitHub Actions on push to `main`
 - [Phase ?]: Matched existing asyncio.run() test idiom; skipped pytest-asyncio (zero new config) for handler tests
+- [Phase 04-02]: Gated deploy.yml on CI via workflow_run [CI] + if conclusion=='success'; kept the two-file structure (ci.yml unchanged) per PLAN, not the single-file ci-cd.yml in RESEARCH summary
+- [Phase 04-02]: Deploy uses --pull always --force-recreate (compose #9259); removed in-script GITHUB_TOKEN (revoked at job end / leaks into remote process list); checkout pinned to workflow_run.head_sha so the image is built from the CI-verified commit
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-15T07:52:34.763Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-06-15T08:05:00.000Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None

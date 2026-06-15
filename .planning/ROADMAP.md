@@ -100,7 +100,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02-PLAN.md — Combined ci-cd.yml: ci-checks job + CI-gated deploy job (needs/if), --pull always --force-recreate, drop in-script token, delete old ci.yml/deploy.yml (DEP-04, QA-02)
+- [x] 04-02-PLAN.md — Gate deploy.yml on CI via workflow_run [CI] + if conclusion==success; --pull always --force-recreate; checkout pinned to verified SHA; drop in-script token (DEP-04, QA-02)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -116,4 +116,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Working AI Bot | 2/2 | Complete | 2026-06-12 |
 | 2. Reliability Hardening | 1/1 | Complete | 2026-06-14 |
 | 3. Containerize & Run 24/7 | 2/2 | Complete | 2026-06-15 |
-| 4. CI/CD Auto-Deploy | 1/3 | In Progress|  |
+| 4. CI/CD Auto-Deploy | 2/3 | In Progress|  |
