@@ -92,7 +92,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. After a successful pipeline run, the server is running the newly built version of the bot
   5. The deploy stops the old container before starting the new one, so no 409 polling conflict occurs during release
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — QA-01 handler tests (tests/test_handlers.py) + pin ruff/mypy in requirements-dev.txt (QA-01, QA-02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04-02-PLAN.md — Combined ci-cd.yml: ci-checks job + CI-gated deploy job (needs/if), --pull always --force-recreate, drop in-script token, delete old ci.yml/deploy.yml (DEP-04, QA-02)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 04-03-PLAN.md — Live pipeline checkpoint: GHCR pull-credential decision + end-to-end verify (CI gate, new version on server, no 409) (DEP-04, QA-02)
 
 ## Progress
 
@@ -104,4 +116,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Working AI Bot | 2/2 | Complete | 2026-06-12 |
 | 2. Reliability Hardening | 1/1 | Complete | 2026-06-14 |
 | 3. Containerize & Run 24/7 | 2/2 | Complete | 2026-06-15 |
-| 4. CI/CD Auto-Deploy | 0/TBD | Not started | - |
+| 4. CI/CD Auto-Deploy | 0/3 | Not started | - |
