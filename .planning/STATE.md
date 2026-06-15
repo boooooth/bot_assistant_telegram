@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: null
-last_updated: "2026-06-14"
-last_activity: 2026-06-14 -- Phase 01 complete; Phase 02 timeout fix applied; artifacts caught up
+last_updated: "2026-06-15"
+last_activity: 2026-06-15 -- Phase 03 complete (VPS deploy runbook; GHCR push + auto-restart verified)
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 25
+  completed_phases: 3
+  total_plans: 4
+  completed_plans: 4
+  percent: 75
 ---
 
 # Project State
@@ -21,16 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-11)
 
 **Core value:** Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
-**Current focus:** Phase 01 — working-ai-bot
+**Current focus:** Phase 04 — cicd-auto-deploy
 
 ## Current Position
 
 Phase: 01 (working-ai-bot) — COMPLETE
 Phase: 02 (reliability-hardening) — COMPLETE (timeout added)
-Current: Phase 03 (containerize-run-24-7) — NOT STARTED
-Last activity: 2026-06-14 -- artifacts caught up; ready for Phase 03
+Phase: 03 (containerize-run-24-7) — COMPLETE (2/2 plans; deploy runbook + GHCR/auto-restart verified)
+Current: Phase 04 (cicd-auto-deploy) — NOT STARTED
+Last activity: 2026-06-15 -- Phase 03 complete; VPS deploy runbook proven end-to-end (DEP-01/DEP-02)
 
-Progress: [██░░░░░░░░] 25%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
@@ -84,6 +85,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-12T01:52:16.840Z
-Stopped at: context exhaustion at 100% (2026-06-12)
-Resume file: .planning/phases/01-working-ai-bot/01-CONTEXT.md
+Last session: 2026-06-15
+Stopped at: Completed 03-02-PLAN.md (Phase 03 complete)
+Resume file: None

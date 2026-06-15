@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Working AI Bot** - A real Telegram bot replies to messages via OpenAI, end-to-end
 - [x] **Phase 2: Reliability Hardening** - Bot stays responsive and stable under real public traffic
-- [ ] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a Linux VPS, always up
+- [x] **Phase 3: Containerize & Run 24/7** - Bot runs in Docker on a Linux VPS, always up
 - [ ] **Phase 4: CI/CD Auto-Deploy** - Pushing to `main` runs CI checks, then builds and deploys the bot automatically
 
 ## Phase Details
@@ -68,7 +68,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The bot runs continuously on the server and comes back automatically after a crash or server reboot
   3. The Telegram token and OpenAI key are supplied via environment at runtime, and neither appears in git history nor inside the built image
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+**Wave 1**
+
+- [x] 03-01-PLAN.md — Buildable hardened image: pin litellm, add .dockerignore, non-root botuser, compose build, fix .env.example env names (DEP-01, DEP-03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 03-02-PLAN.md — VPS deploy runbook in README: GHCR push, server bootstrap, pull+run, auto-restart/reboot recovery (DEP-01, DEP-02)
 
 ### Phase 4: CI/CD Auto-Deploy
 
@@ -95,5 +103,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Working AI Bot | 2/2 | Complete | 2026-06-12 |
 | 2. Reliability Hardening | 1/1 | Complete | 2026-06-14 |
-| 3. Containerize & Run 24/7 | 0/TBD | Not started | - |
+| 3. Containerize & Run 24/7 | 2/2 | Complete | 2026-06-15 |
 | 4. CI/CD Auto-Deploy | 0/TBD | Not started | - |
