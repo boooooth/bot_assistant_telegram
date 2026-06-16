@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import ContextTypes
 
-from .prompts import HELP_TEXT, START_TEXT, TRUNCATION_NOTE
+from .prompts import HELP_TEXT, NON_TEXT_REPLY, START_TEXT, TRUNCATION_NOTE
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,12 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message is None:
         return
     await update.message.reply_text(HELP_TEXT)
+
+
+async def handle_non_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None:
+        return
+    await update.message.reply_text(NON_TEXT_REPLY)
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

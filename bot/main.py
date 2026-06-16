@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 from . import openai_client
 from .config import load_settings
-from .handlers import handle_text, help_cmd, start
+from .handlers import handle_non_text, handle_text, help_cmd, start
 
 
 def main() -> None:
@@ -27,5 +27,6 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    app.add_handler(MessageHandler(~filters.TEXT & ~filters.COMMAND, handle_non_text))
 
     app.run_polling(allowed_updates=Update.ALL_TYPES)
