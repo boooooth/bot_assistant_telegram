@@ -1,8 +1,8 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from bot.handlers import handle_text, help_cmd, split_text, start
-from bot.prompts import HELP_TEXT, START_TEXT, TRUNCATION_NOTE
+from bot.handlers import handle_non_text, handle_text, help_cmd, split_text, start
+from bot.prompts import HELP_TEXT, NON_TEXT_REPLY, START_TEXT, TRUNCATION_NOTE
 
 
 def _make_update(text="hello", chat_id=123):
@@ -119,3 +119,15 @@ def test_split_text_caps_at_max_chunks_and_appends_truncation_note():
     assert len(chunks) == 3
     assert "truncated" in chunks[-1]
     assert chunks[-1].endswith(TRUNCATION_NOTE)
+
+
+def test_handle_non_text_sends_guard_message():
+    update = _make_update()
+    asyncio.run(handle_non_text(update, MagicMock()))
+    update.message.reply_text.assert_awaited_once_with(NON_TEXT_REPLY)
+
+
+def test_handle_non_text_no_message_is_noop():
+    update = _make_update()
+    update.message = None
+    asyncio.run(handle_non_text(update, MagicMock()))  # must not raise
