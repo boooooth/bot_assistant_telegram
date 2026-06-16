@@ -15,6 +15,7 @@ def _make_update(text="hello", chat_id=123):
 
 def _make_context(reply="hi back", allowed=frozenset()):
     context = MagicMock()
+    context.bot.send_chat_action = AsyncMock()
     context.bot_data = {
         "complete": AsyncMock(return_value=reply),
         "allowed_chat_ids": allowed,
@@ -117,3 +118,4 @@ def test_split_text_caps_at_max_chunks_and_appends_truncation_note():
     chunks = split_text(text)
     assert len(chunks) == 3
     assert "truncated" in chunks[-1]
+    assert chunks[-1].endswith(TRUNCATION_NOTE)

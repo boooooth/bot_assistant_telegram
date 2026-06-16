@@ -1,11 +1,30 @@
 import logging
 
 from telegram import Update
+from telegram.constants import ChatAction
 from telegram.ext import ContextTypes
 
-from .prompts import HELP_TEXT, START_TEXT
+from .prompts import HELP_TEXT, START_TEXT, TRUNCATION_NOTE
 
 logger = logging.getLogger(__name__)
+
+
+def split_text(text: str, max_len: int = 4096, max_chunks: int = 3) -> list[str]:
+    """Split text at newline boundaries; cap at max_chunks."""
+    chunks: list[str] = []
+    remaining = text
+    while remaining and len(chunks) < max_chunks:
+        if len(remaining) <= max_len:
+            chunks.append(remaining)
+            break
+        split_at = remaining.rfind("\n", 0, max_len)
+        if split_at == -1:
+            split_at = max_len
+        chunks.append(remaining[:split_at])
+        remaining = remaining[split_at:].lstrip("\n")
+    if remaining and len(chunks) == max_chunks:
+        chunks[-1] += TRUNCATION_NOTE
+    return chunks
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -24,6 +43,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if update.message is None or update.effective_chat is None:
         return
     chat_id = update.effective_chat.id
+    await context.bot.send_chat_action(
+        chat_id=chat_id,
+        action=ChatAction.TYPING,
+    )
     allowed_chat_ids = context.bot_data.get("allowed_chat_ids", frozenset())
     if allowed_chat_ids and chat_id not in allowed_chat_ids:
         await update.message.reply_text(
@@ -34,7 +57,8 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     logger.info("message from chat_id=%s", chat_id)
     try:
         reply = await context.bot_data["complete"](update.message.text)
-        await update.message.reply_text(reply)
+        for chunk in split_text(reply):
+            await update.message.reply_text(chunk)
         logger.info("replied to chat_id=%s", chat_id)
     except Exception:
         logger.exception("OpenAI call failed for chat_id=%s", chat_id)
