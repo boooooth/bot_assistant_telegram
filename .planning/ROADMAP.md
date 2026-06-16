@@ -24,15 +24,16 @@
 | 2. Reliability Hardening | v1.0 | 1/1 | Complete | 2026-06-14 |
 | 3. Containerize & Run 24/7 | v1.0 | 2/2 | Complete | 2026-06-15 |
 | 4. CI/CD Auto-Deploy | v1.0 | 3/3 | Complete (04-03 deferred) | 2026-06-16 |
-| 5. UX Polish | v1.1 | 0/? | Not started | — |
+| 5. UX Polish | v1.1 | 0/2 | Planned | — |
 
 ### Phase 5: UX Polish
 
 **Goal:** Users get a polished chat experience — a typing indicator while the bot thinks, long replies split cleanly across multiple messages, and a clear "text only" response for photo/voice/sticker messages instead of a silent failure.
 **Requirements**: TBD
 **Depends on:** Phase 4
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
 
-- [ ] TBD (run /gsd-plan-phase 5 to break down)
+- [ ] 05-01-PLAN.md — Typing indicator + long-reply splitting (D-01–D-05)
+- [ ] 05-02-PLAN.md — Non-text message guard (D-06–D-08)
