@@ -61,8 +61,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         logger.info("unauthorized access attempt from chat_id=%s", chat_id)
         return
     logger.info("message from chat_id=%s", chat_id)
+    user_text = update.message.text
+    if not user_text:
+        return  # nothing to send; PTB filter shouldn't let this through, but guard anyway
     try:
-        reply = await context.bot_data["complete"](update.message.text)
+        reply = await context.bot_data["complete"](user_text)
         for chunk in split_text(reply):
             await update.message.reply_text(chunk)
         logger.info("replied to chat_id=%s", chat_id)
