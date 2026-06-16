@@ -19,7 +19,7 @@ def split_text(text: str, max_len: int = 4096, max_chunks: int = 3) -> list[str]
             break
         split_at = remaining.rfind("\n", 0, max_len)
         if split_at == -1:
-            split_at = max_len
+            split_at = max_len - 1  # stay one char inside Telegram's 4096-char limit
         chunks.append(remaining[:split_at])
         remaining = remaining[split_at:].lstrip("\n")
     if remaining and len(chunks) == max_chunks:
