@@ -13,7 +13,26 @@ findings:
   warning: 3
   info: 2
   total: 6
-status: issues_found
+status: fixed
+fixes_applied:
+  - id: CR-01
+    commit: f60e9f3
+    description: Guard update.message.text against None before passing to LLM
+  - id: WR-02
+    commit: 145a01a
+    description: Wrap ALLOWED_CHAT_IDS parsing to raise ConfigError on non-integer input
+  - id: WR-03
+    commit: 33db12b
+    description: Use max_len-1 for split_text hard-cut to stay below Telegram 4096-char limit
+  - id: WR-01
+    status: wont-fix
+    reason: Locked design decision D-02 — typing indicator fires before auth check by explicit user decision
+  - id: IN-01
+    status: skipped
+    reason: Info finding — not in scope for this fix run
+  - id: IN-02
+    status: skipped
+    reason: Info finding — not in scope for this fix run
 ---
 
 # Phase 05: Code Review Report
