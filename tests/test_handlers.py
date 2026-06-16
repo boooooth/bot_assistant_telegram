@@ -28,7 +28,7 @@ def test_handle_text_replies_with_llm_output():
     context = _make_context(reply="the answer")
     asyncio.run(handle_text(update, context))
     context.bot_data["complete"].assert_awaited_once_with("hello")
-    update.message.reply_text.assert_awaited_once_with("the answer")
+    update.message.reply_text.assert_awaited_once_with("the answer", do_quote=True)
 
 
 def test_handle_text_friendly_error_on_llm_failure():

@@ -67,7 +67,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     try:
         reply = await context.bot_data["complete"](user_text)
         for chunk in split_text(reply):
-            await update.message.reply_text(chunk)
+            await update.message.reply_text(chunk, do_quote=True)
         logger.info("replied to chat_id=%s", chat_id)
     except Exception:
         logger.exception("OpenAI call failed for chat_id=%s", chat_id)
