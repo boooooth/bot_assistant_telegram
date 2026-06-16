@@ -13,3 +13,7 @@ HELP_TEXT = (
     "Just send me any text message and I'll reply using AI.\n"
     "Each message is answered on its own — I don't remember past messages yet."
 )
+
+NON_TEXT_REPLY = "I only understand text messages — send me a question and I'll reply!"
+
+TRUNCATION_NOTE = "\n\n...(truncated — reply was too long)"

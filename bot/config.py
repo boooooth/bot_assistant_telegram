@@ -45,11 +45,16 @@ def load_settings() -> Settings:
         )
 
     raw_ids = os.environ.get("ALLOWED_CHAT_IDS", "").strip()
-    allowed_chat_ids: frozenset[int] = (
-        frozenset(int(i.strip()) for i in raw_ids.split(",") if i.strip())
-        if raw_ids
-        else frozenset()
-    )
+    try:
+        allowed_chat_ids: frozenset[int] = (
+            frozenset(int(i.strip()) for i in raw_ids.split(",") if i.strip())
+            if raw_ids
+            else frozenset()
+        )
+    except ValueError as exc:
+        raise ConfigError(
+            f"ALLOWED_CHAT_IDS contains a non-integer value: {exc}"
+        ) from exc
 
     return Settings(
         telegram_bot_token=os.environ["TELEGRAM_BOT_TOKEN"],
