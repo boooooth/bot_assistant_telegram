@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: Defining requirements
+status: executing
 stopped_at: Phase 5 context gathered
-last_updated: "2026-06-16T07:02:46.020Z"
-last_activity: 2026-06-16 — Milestone v1.1 UX Polish started
+last_updated: "2026-06-16T07:26:03.680Z"
+last_activity: 2026-06-16 -- Completed 05-01-PLAN.md
 progress:
   total_phases: 1
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -21,28 +21,28 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
-**Current focus:** Milestone v1.1 — UX Polish (typing indicator, reply splitting, non-text guard)
+**Current focus:** Phase 05 — ux-polish
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-06-16 — Milestone v1.1 UX Polish started
+Phase: 05 (ux-polish) — EXECUTING
+Plan: 2 of 2
+Status: Executing Phase 05 (05-01 complete)
+Last activity: 2026-06-16 -- Completed 05-01-PLAN.md
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 1
+- Average duration: ~12m
+- Total execution time: ~12m
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 05 | 1 | ~12m | ~12m |
 
 *Updated after each plan completion*
 
@@ -59,6 +59,8 @@ Recent decisions affecting current work:
 - Linux VPS + Docker; CI/CD via GitHub Actions on push to `main`
 - [Phase 04-02]: Gated deploy.yml on CI via workflow_run [CI] + if conclusion=='success'; kept the two-file structure
 - [Phase 04-02]: Deploy uses --pull always --force-recreate; removed in-script GITHUB_TOKEN; checkout pinned to workflow_run.head_sha
+- [Phase 05-01]: Typing action fires once before auth check so all users see feedback (D-01, D-02); ChatAction imported from telegram.constants (PTB 22.x)
+- [Phase 05-01]: split_text caps long replies at 3 newline-boundary chunks with TRUNCATION_NOTE on the last (D-03, D-04, D-05)
 
 ### Pending Todos
 
