@@ -2,37 +2,36 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-06-15T08:05:00.000Z"
-last_activity: 2026-06-15 -- Completed 04-02 (deploy gated on CI via workflow_run)
+status: Complete
+stopped_at: Completed 04-03-PLAN.md (deferred — no VPS)
+last_updated: "2026-06-16T00:00:00.000Z"
+last_activity: 2026-06-16 -- Completed Phase 04 (04-03 deferred — no VPS available)
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 8
-  completed_plans: 7
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-11)
+See: .planning/PROJECT.md (updated 2026-06-16)
 
 **Core value:** Send a message in Telegram, get a useful LLM reply back — reliably, 24/7.
-**Current focus:** Phase 04 — ci-cd-auto-deploy
+**Current focus:** Between milestones — v1.0 shipped. Run `/gsd-new-milestone` to plan v1.1.
 
 ## Current Position
 
-Phase: 04 (ci-cd-auto-deploy) — EXECUTING
-Plan: 3 of 3
+Phase: 01 (working-ai-bot) — COMPLETE
 Phase: 02 (reliability-hardening) — COMPLETE (timeout added)
 Phase: 03 (containerize-run-24-7) — COMPLETE (2/2 plans; deploy runbook + GHCR/auto-restart verified)
-Current: Phase 04 (cicd-auto-deploy) — Wave 2 complete (deploy gated on CI); Wave 3 (live checkpoint) next
-Last activity: 2026-06-15 -- Completed 04-02 (deploy gated on CI via workflow_run)
+Phase: 04 (ci-cd-auto-deploy) — COMPLETE (04-03 deferred — no VPS; code pipeline fully wired)
+Last activity: 2026-06-16 -- Completed Phase 04 (04-03 deferred — no VPS available)
 
-Progress: [█████████░] 88%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -87,7 +86,7 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| Live infra validation | 04-03: GHCR pull credential + end-to-end pipeline run on VPS | Pending VPS provisioning | Phase 04 |
 
 ## Session Continuity
 
